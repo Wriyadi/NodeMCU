@@ -1,9 +1,3 @@
-#ifdef ENABLE_DEBUG
-       #define DEBUG_ESP_PORT Serial
-       #define NODEBUG_WEBSOCKETS
-       #define NDEBUG
-#endif 
-
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
