@@ -82,19 +82,19 @@ void handleNewMessages(int numNewMessages) {
       digitalWrite(D3, LOW);
     }
     if (text == "/state") {
-      if (digitalRead(D1==1)){
+      if (digitalRead(D1)==HIGH){
         bot.sendMessage(chat_id, "LED1 is ON", "");
       }
       else {
         bot.sendMessage(chat_id, "LED1 is OFF", "");
       }
-      if (digitalRead(D2==1)){
+      if (digitalRead(D2)==HIGH){
         bot.sendMessage(chat_id, "LED2 is ON", "");
       }
       else {
         bot.sendMessage(chat_id, "LED2 is OFF", "");
       }
-      if (digitalRead(D3==1)){
+      if (digitalRead(D3)==HIGH){
         bot.sendMessage(chat_id, "LED3 is ON", "");
       }
       else {
