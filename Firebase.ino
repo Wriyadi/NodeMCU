@@ -8,16 +8,19 @@ FirebaseData firebaseData;
  
 #define LED1 D1
 #define LED2 D2
+#define LED3 D3
  
 void setup() {
   Serial.begin(115200);
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
   digitalWrite(LED1, LOW); //nilai awal LED1 akan off
   digitalWrite(LED2, LOW); //nilai awal LED2 akan off
+  digitalWrite(LED3, LOW); //nilai awal LED3 akan off
   
   ConnectWifi();
-  Firebase.begin("https://esp8266-61098-default-rtdb.asia-southeast1.firebasedatabase.app/", "AIzaSyDBLmz76dnI7");
+  Firebase.begin("https://esp8266-60018-default-rtdb.asia-southeast1.firebasedatabase.app/", "AIzaSyDBLxxx");
   //Firebase.begin("firebase host", "firebase auth database");
 }
  
@@ -58,6 +61,20 @@ void loop() {
         else if (FBStatus == "OFF") {                                                  
         Serial.println("LED2 OFF");
         digitalWrite(LED2, LOW);                                                
+          }
+      else {Serial.println("Salah kode! isi dengan data ON/OFF");}
+    }
+  }
+ if (Firebase.getString(firebaseData, "/Led3")) { //misal database diberikan nama LED3
+    if  (firebaseData.dataType() == "string") 
+    {
+      String FBStatus = firebaseData.stringData();
+      if (FBStatus == "ON") {                                                         
+      Serial.println("LED3 ON");                         
+      digitalWrite(LED3, HIGH); }
+        else if (FBStatus == "OFF") {                                                  
+        Serial.println("LED3 OFF");
+        digitalWrite(LED3, LOW);                                                
           }
       else {Serial.println("Salah kode! isi dengan data ON/OFF");}
     }
