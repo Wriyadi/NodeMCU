@@ -27,12 +27,12 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 // Variables to save database paths
-String listenerPath = "/";
+String listenerPath = "/Output/";
 
 // Declare outputs
-const int output1 = 5;
-const int output2 = 4;
-const int output3 = 0;
+const int D0 = 16;
+const int D1 = 5;
+const int D2 = 4;
 
 // Initialize WiFi
 void initWiFi() {
@@ -113,9 +113,9 @@ void setup(){
   initWiFi();
 
   // Initialize Outputs
-  pinMode(output1, OUTPUT);
-  pinMode(output2, OUTPUT);
-  pinMode(output3, OUTPUT);
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
   
   // Assign the api key (required)
   config.api_key = API_KEY;
