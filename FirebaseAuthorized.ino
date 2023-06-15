@@ -9,17 +9,17 @@
 
 // Insert your network credentials
 #define WIFI_SSID "SSID"
-#define WIFI_PASSWORD "PASSWORD"
+#define WIFI_PASSWORD "Password"
 
 // Insert Firebase project API Key
-#define API_KEY "AIzaSyDBLmz76dnI7jleE9xxx"
+#define API_KEY "AIzaSyCUxxxx"
 
 // Insert Authorized Username and Corresponding Password
 #define USER_EMAIL "xxx@gmail.com"
 #define USER_PASSWORD "PASSWORD"
 
 // Insert RTDB URLefine the RTDB URL
-#define DATABASE_URL "https://esp8266-61098-default-rtdb.asia-southeast1.firebasedatabase.app/"
+#define DATABASE_URL "https://willyxxx.asia-southeast1.firebasedatabase.app/"
 
 // Define Firebase objects
 FirebaseData stream;
@@ -27,12 +27,12 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 // Variables to save database paths
-String listenerPath = "/Output/";
+String listenerPath = "/Output";
 
 // Declare outputs
-const int D0 = 16;
-const int D1 = 5;
-const int D2 = 4;
+const int Led1 = 16;
+const int Led2 = 5;
+const int Led3 = 4;
 
 // Initialize WiFi
 void initWiFi() {
@@ -113,9 +113,9 @@ void setup(){
   initWiFi();
 
   // Initialize Outputs
-  pinMode(D0, OUTPUT);
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
+  pinMode(Led1, OUTPUT);
+  pinMode(Led2, OUTPUT);
+  pinMode(Led3, OUTPUT);
   
   // Assign the api key (required)
   config.api_key = API_KEY;
