@@ -1,27 +1,28 @@
 <!DOCTYPE html>
+<!-- Complete Project Details at: https://RandomNerdTutorials.com/ -->
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ESP8266 IoT Firebase App</title>
+    <title>ESP IoT Firebase App</title>
 
     <!-- update the version number as needed -->
-    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
 
     <!-- include only the Firebase features as you need -->
-    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
 
     <script>
       // REPLACE WITH YOUR web app's Firebase configuration
       const firebaseConfig = {
-        apiKey: "AIzaSyAuxaKuyxxxx",
-        authDomain: "projectbase-16b79.firebaseapp.com",
-        databaseURL: "https://projectbase-16b79-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "projectbase-16b79",
-        storageBucket: "projectbase-16b79.appspot.com",
-        messagingSenderId: "8185238xxx",
-        appId: "1:818523887659:web:b6d67ea4bexxxx"
+        apiKey: "AIzaSyCUxxxx",
+        authDomain: "willyxxx.firebaseapp.com",
+        databaseURL: "https://willyxxx.asia-southeast1.firebasedatabase.app",
+        projectId: "willy-xxx",
+        storageBucket: "willyxxx.appspot.com",
+        messagingSenderId: "22426xxx",
+        appId: "1:22426xxx:web:91bc326847xxx"
       };
 
       // Initialize firebase
@@ -40,7 +41,7 @@
 <body>
   <!--TOP BAR-->
   <div class="topnav">
-    <h1>ESP8266 IoT LED Control <i class="fas fa-lightbulb"></i></h1>
+    <h1>ESP GPIO Control <i class="fas fa-lightbulb"></i></h1>
   </div>
 
   <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
@@ -60,7 +61,7 @@
       <label for="input-password"><b>Password</b></label>
       <input type="password" placeholder="Enter Password" id="input-password" required>
 
-      <button type="submit" id="login">Login</button>
+      <button type="submit" id="login-button">Login</button>
       <p id="error-message" style="color:red;"></p>
     </div>
   </form>
@@ -68,9 +69,9 @@
   <!--CONTENT (SENSOR READINGS)-->
   <div class="content-sign-in" id="content-sign-in" style="display: none;">
     <div class="card-grid">
-      <!--CARD FOR GPIO 16-->
+      <!--CARD FOR GPIO 12-->
       <div class="card">
-        <p class="card-title"><i class="fas fa-lightbulb"></i> D0</p>
+        <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 12</p>
         <p>
           <button class="button-on" id="btn1On">ON</button>
           <button class="button-off" id="btn1Off">OFF</button>
@@ -78,9 +79,9 @@
         <p class="state">State:<span id="state1"></span></p>
       </div>
 
-      <!--CARD FOR GPIO 5-->
+      <!--CARD FOR GPIO 13-->
       <div class="card">
-        <p class="card-title"><i class="fas fa-lightbulb"></i> D1</p>
+        <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 13</p>
         <p>
           <button class="button-on" id="btn2On">ON</button>
           <button class="button-off" id="btn2Off">OFF</button>
@@ -88,44 +89,14 @@
         <p class="state">State:<span id="state2"></span></p>
       </div>
 
-      <!--CARD FOR GPIO 4-->
+      <!--CARD FOR GPIO 14-->
       <div class="card">
-        <p class="card-title"><i class="fas fa-lightbulb"></i> D2</p>
+        <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 14</p>
         <p>
           <button class="button-on" id="btn3On">ON</button>
           <button class="button-off" id="btn3Off">OFF</button>
         </p>
         <p class="state">State:<span id="state3"></span></p>
-      </div>
-
-      <!--CARD FOR GPIO 0-->
-      <div class="card">
-        <p class="card-title"><i class="fas fa-lightbulb"></i> D3</p>
-        <p>
-          <button class="button-on" id="btn4On">ON</button>
-          <button class="button-off" id="btn4Off">OFF</button>
-        </p>
-        <p class="state">State:<span id="state4"></span></p>
-      </div>
-
-      <!--CARD FOR GPIO 2-->
-      <div class="card">
-        <p class="card-title"><i class="fas fa-lightbulb"></i> D4</p>
-        <p>
-          <button class="button-on" id="btn5On">ON</button>
-          <button class="button-off" id="btn5Off">OFF</button>
-        </p>
-        <p class="state">State:<span id="state5"></span></p>
-      </div>
-
-      <!--CARD FOR GPIO 14-->
-      <div class="card">
-        <p class="card-title"><i class="fas fa-lightbulb"></i> D5</p>
-        <p>
-          <button class="button-on" id="btn6On">ON</button>
-          <button class="button-off" id="btn6Off">OFF</button>
-        </p>
-        <p class="state">State:<span id="state6"></span></p>
       </div>
     </div>
   </div>
