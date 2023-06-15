@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     // login
     const loginForm = document.querySelector('#login-form');
-    loginForm.addEventListener('login', (e) => {
+    loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         // get user info
         const email = loginForm['input-email'].value;
