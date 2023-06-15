@@ -17,9 +17,9 @@ const btn3On = document.getElementById('btn3On');
 const btn3Off = document.getElementById('btn3Off');
 
 // Database path for GPIO states
-var dbPathOutput1 = 'Output/D0';
-var dbPathOutput2 = 'Output/D1';
-var dbPathOutput3 = 'Output/D2';
+var dbPathOutput1 = 'Output/16';
+var dbPathOutput2 = 'Output/5';
+var dbPathOutput3 = 'Output/4';
 
 // Database references
 var dbRefOutput1 = firebase.database().ref().child(dbPathOutput1);
@@ -61,7 +61,6 @@ const setupUI = (user) => {
             stateElement3.innerText="OFF";
         }
     });
-    
 
     // Update database uppon button click
     btn1On.onclick = () =>{
