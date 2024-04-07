@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cardview_dark_background"
+    android:padding="16dp"
+    tools:context=".LoginActivity">
+
+    <EditText
+        android:id="@+id/emailEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/email"
+        android:textSize="10pt"
+        android:textStyle="bold"
+        android:inputType="textEmailAddress"
+        android:autofillHints="emailAddress"
+        android:textColorLink="#808080"
+        android:textColorHint="#808080"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/passwordEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/password"
+        android:textSize="10pt"
+        android:textStyle="bold"
+        android:inputType="textPassword"
+        android:autofillHints="password"
+        android:textColorLink="#808080"
+        android:textColorHint="#808080"
+        android:layout_below="@id/emailEditText"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/log_in"
+        android:textSize="10pt"
+        android:layout_below="@id/passwordEditText"
+        android:layout_marginBottom="16dp"
+        android:minHeight="48dp" />
+
+</RelativeLayout>
