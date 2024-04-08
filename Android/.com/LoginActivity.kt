@@ -37,14 +37,19 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     val user = auth.currentUser
-                    val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                    startActivity(intent)
+                    user?.let { currentUser ->
+                        val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                        intent.putExtra("email", currentUser.email) // Send email to MainActivity
+                        startActivity(intent)
+                    } ?: run {
+                        Log.e("LoginActivity", "signInWithEmail: No user found after successful login")
+                        Toast.makeText(baseContext, "No user found after successful login", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.e("LoginActivity", "signInWithEmail:failure", task.exception)
                     Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                 }
             }
-
     }
 }
