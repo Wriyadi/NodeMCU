@@ -38,10 +38,20 @@
         android:id="@+id/loginButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Log In"
-        android:textSize="10pt"
         android:layout_below="@id/passwordEditText"
+        android:layout_marginTop="80dp"
         android:layout_marginBottom="16dp"
-        android:minHeight="48dp" />
+        android:minHeight="48dp"
+        android:text="Log In"
+        android:textSize="10pt" />
 
-    </RelativeLayout>
+    <CheckBox
+        android:id="@+id/checkBoxShowPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/passwordEditText"
+        android:layout_marginTop="1dp"
+        android:textSize="7pt"
+        android:text="Show Password" />
+
+</RelativeLayout>
