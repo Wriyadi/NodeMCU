@@ -2,22 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="Firebase IoT"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Firebase_IoT"
         tools:targetApi="31">
-
         <activity
             android:name=".LoginActivity"
-            android:label="FirebaseIoT"
+            android:label="WillyR IoT"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,7 +24,7 @@
 
         <activity
             android:name=".MainActivity"
-            android:label="MainActivity"
+            android:label="Firebase IoT"
             android:exported="true">
         </activity>
 
