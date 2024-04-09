@@ -16,4 +16,4 @@ select "Use an existing project" <br>
 2. Configure as a single-page app (rewrite urls to /index.html)? No
 3. Set up automatic builds and deploys with GitHub? No
 <br>
-firebase deploy
+firebase deploy --only hosting:wriyadi
