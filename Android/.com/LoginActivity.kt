@@ -2,6 +2,7 @@ package com.example.firebase_iot
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,6 +29,16 @@ class LoginActivity : AppCompatActivity() {
                 binding.emailEditText.text.toString(),
                 binding.passwordEditText.text.toString()
             )
+        }
+        binding.checkBoxShowPassword.setOnCheckedChangeListener { checkBoxShowPassword, isChecked ->
+            val passwordEditText = binding.passwordEditText
+            if (isChecked) {
+                // Show Password
+                passwordEditText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            } else {
+                // Hide Password
+                passwordEditText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
         }
     }
 
