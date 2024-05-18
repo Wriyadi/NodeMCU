@@ -2,6 +2,11 @@
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>   // Universal Telegram Bot Library written by Brian Lough: https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot
 #include <ArduinoJson.h>
+#include <DHT.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
 // Replace with your network credentials
 const char* ssid = "SSID";
@@ -36,7 +41,7 @@ void handleNewMessages(int numNewMessages) {
       bot.sendMessage(chat_id, "Unauthorized user", "");
       continue;
     }
-    
+
     // Print the received message
     String text = bot.messages[i].text;
     Serial.println(text);
@@ -46,59 +51,84 @@ void handleNewMessages(int numNewMessages) {
     if (text == "/start") {
       String welcome = "Welcome, " + from_name + ".\n";
       welcome += "Use the following commands to control your outputs.\n\n";
-      welcome += "/led1_on to turn GPIO ON \n";
-      welcome += "/led1_off to turn GPIO OFF \n";
+      welcome += "/r1_on to turn GPIO ON \n";
+      welcome += "/r1_off to turn GPIO OFF \n";
+      welcome += "/r2_on to turn GPIO ON \n";
+      welcome += "/r2_off to turn GPIO OFF \n";
+      welcome += "/r3_on to turn GPIO ON \n";
+      welcome += "/r3_off to turn GPIO OFF \n";
+      welcome += "/temp to get temperature data \n";
+      welcome += "/hum to get humidity data \n";
       welcome += "/state to request current GPIO state \n";
       bot.sendMessage(chat_id, welcome, "");
     }
 
-    if (text == "/led1_on") {
+    if (text == "/r1_on") {
       bot.sendMessage(chat_id, "LED1 state set to ON", "");
-      digitalWrite(D1, HIGH);
+      digitalWrite(16, LOW);
     }
     
-    if (text == "/led1_off") {
+    if (text == "/r1_off") {
       bot.sendMessage(chat_id, "LED1 state set to OFF", "");
-      digitalWrite(D1, LOW);
+      digitalWrite(16, HIGH);
     }
     
-    if (text == "/led2_on") {
+    if (text == "/r2_on") {
       bot.sendMessage(chat_id, "LED2 state set to ON", "");
-      digitalWrite(D2, HIGH);
+      digitalWrite(5, LOW);
     }
     
-    if (text == "/led2_off") {
+    if (text == "/r2_off") {
       bot.sendMessage(chat_id, "LED2 state set to OFF", "");
-      digitalWrite(D2, LOW);
+      digitalWrite(5, HIGH);
     }
 
-    if (text == "/led3_on") {
+    if (text == "/r3_on") {
       bot.sendMessage(chat_id, "LED3 state set to ON", "");
-      digitalWrite(D3, HIGH);
+      digitalWrite(4, LOW);
     }
     
-    if (text == "/led3_off") {
+    if (text == "/r3_off") {
       bot.sendMessage(chat_id, "LED3 state set to OFF", "");
-      digitalWrite(D3, LOW);
+      digitalWrite(4, HIGH);
     }
+
+    if (text == "/temp") {
+      float temperature = dht.readTemperature();
+      if (!isnan(temperature)) {
+        bot.sendMessage(chat_id, "Temperature: " + String(temperature) + " °C", "");
+      } else {
+        bot.sendMessage(chat_id, "Failed to read temperature data", "");
+      }
+    }
+
+    if (text == "/hum") {
+      float humidity = dht.readHumidity();
+      if (!isnan(humidity)) {
+        bot.sendMessage(chat_id, "Humidity: " + String(humidity) + " %", "");
+      } else {
+        bot.sendMessage(chat_id, "Failed to read humidity data", "");
+      }
+    }
+    
     if (text == "/state") {
-      if (digitalRead(D1)==HIGH){
-        bot.sendMessage(chat_id, "LED1 is ON", "");
+      if (digitalRead(16)==LOW){
+        bot.sendMessage(chat_id, "RELAY 1 is ON", "");
       }
       else {
-        bot.sendMessage(chat_id, "LED1 is OFF", "");
+        bot.sendMessage(chat_id, "RELAY 1 is OFF", "");
       }
-      if (digitalRead(D2)==HIGH){
-        bot.sendMessage(chat_id, "LED2 is ON", "");
-      }
-      else {
-        bot.sendMessage(chat_id, "LED2 is OFF", "");
-      }
-      if (digitalRead(D3)==HIGH){
-        bot.sendMessage(chat_id, "LED3 is ON", "");
+      if (digitalRead(5)==LOW){
+        bot.sendMessage(chat_id, "RELAY 2 is ON", "");
       }
       else {
-        bot.sendMessage(chat_id, "LED3 is OFF", "");
+        bot.sendMessage(chat_id, "RELAY 2 is OFF", "");
+      }
+      if (digitalRead(4)==LOW){
+        bot.sendMessage(chat_id, "RELAY 3 is ON", "");
+      }
+      else {
+        bot.sendMessage(chat_id, "RELAY 3 is OFF", "");
       }
     }
   }
@@ -110,12 +140,14 @@ void setup() {
   configTime(0, 0, "pool.ntp.org");      // get UTC time via NTP
   client.setTrustAnchors(&cert); // Add root certificate for api.telegram.org
 
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
-  pinMode(D3, OUTPUT);
-  digitalWrite(D1, LOW);
-  digitalWrite(D2, LOW);
-  digitalWrite(D3, LOW);
+  pinMode(16, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(2, INPUT);
+  
+  digitalWrite(16, HIGH);
+  digitalWrite(5, HIGH);
+  digitalWrite(4, HIGH);
 
   // Connect to Wi-Fi
   WiFi.mode(WIFI_STA);
