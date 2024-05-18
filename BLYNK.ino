@@ -1,79 +1,66 @@
-#define BLYNK_AUTH_TOKEN            "HOC1HLpxxx"
 #define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID "TMPL6MVxxxx"
+#define BLYNK_TEMPLATE_NAME "Project WillyR"
+#define BLYNK_AUTH_TOKEN "UUvGgg3kxxxxxx"
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 
-char auth[] = BLYNK_AUTH_TOKEN;
+char ssid[] = "ssid";
+char pass[] = "password";
 
-// Your WiFi credentials.
-// Set password to "" for open networks.
-char ssid[] = "SSID";
-char pass[] = "PASSWORD";
-
-// This function is called every time the Virtual Pin 1 state changes
-BLYNK_WRITE(V1) // Executes when the value of virtual pin 1 changes
+BLYNK_WRITE(V0)
 {
   if(param.asInt() == 1)
   {
-    // execute this code if the switch widget is now ON
-    digitalWrite(D1,HIGH);  // Set digital pin 2 HIGH
+    digitalWrite(16,HIGH);
   }
   else
   {
-    // execute this code if the switch widget is now OFF
-    digitalWrite(D1,LOW);  // Set digital pin 2 LOW    
+    digitalWrite(16,LOW);
   }
 }
 
-BLYNK_WRITE(V2) // Executes when the value of virtual pin 2 changes
+BLYNK_WRITE(V1)
 {
   if(param.asInt() == 1)
   {
-    // execute this code if the switch widget is now ON
-    digitalWrite(D2,HIGH);  // Set digital pin 2 HIGH
+    digitalWrite(5,HIGH);
   }
   else
   {
-    // execute this code if the switch widget is now OFF
-    digitalWrite(D2,LOW);  // Set digital pin 2 LOW    
+    digitalWrite(5,LOW);
   }
 }
 
-BLYNK_WRITE(V3) // Executes when the value of virtual pin 3 changes
+BLYNK_WRITE(V2)
 {
   if(param.asInt() == 1)
   {
-    // execute this code if the switch widget is now ON
-    digitalWrite(D3,HIGH);  // Set digital pin 2 HIGH
+    digitalWrite(4,HIGH);
   }
   else
   {
-    // execute this code if the switch widget is now OFF
-    digitalWrite(D3,LOW);  // Set digital pin 2 LOW    
+    digitalWrite(4,LOW);
   }
 }
 
-// This function is called every time the device is connected to the Blynk.Cloud
 BLYNK_CONNECTED()
 {
+  Blynk.syncVirtual(V0);
   Blynk.syncVirtual(V1);
   Blynk.syncVirtual(V2);
-  Blynk.syncVirtual(V3);
 }
 
 void setup()
 {
+  // Debug console
   Serial.begin(115200);
+  pinMode(16, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(4, OUTPUT);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
 
-  Blynk.begin(auth, ssid, pass);
-  // You can also specify server:
-  //Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
-  //Blynk.begin(auth, ssid, pass, IPAddress(192,168,1,100), 8080);
-
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
-  pinMode(D3, OUTPUT);
-  }
+}
 
 void loop()
 {
