@@ -65,19 +65,18 @@ std::vector<RelayInfo> relays = {
 #define BAUD_RATE  115200              // Change baudrate to your need
 
 void handleTemperaturesensor() {
-  if (SinricPro.isConnected() == false) {
+  if (!SinricPro.isConnected()) {
     Serial.printf("Not connected to Sinric Pro...!\r\n");
     return; 
   }
 
   static unsigned long last_millis;
-  unsigned long        current_millis = millis();
+  unsigned long current_millis = millis();
   if (last_millis && current_millis - last_millis < EVENT_WAIT_TIME) return;
   last_millis = current_millis;
   
-  temperature = dht.getTemperature();          // get actual temperature in °C
-//  temperature = dht.getTemperature() * 1.8f + 32;  // get actual temperature in °F
-  humidity = dht.getHumidity();                // get actual humidity
+  temperature = dht.readTemperature();          // get actual temperature in °C
+  humidity = dht.readHumidity();                // get actual humidity
 
   if (isnan(temperature) || isnan(humidity)) { // reading failed... 
     Serial.printf("DHT reading failed!\r\n");  // print error message
@@ -87,7 +86,7 @@ void handleTemperaturesensor() {
   Serial.printf("Temperature: %2.1f Celsius\tHumidity: %2.1f%%\r\n", temperature, humidity);
 
   if (temperature == lastTemperature && humidity == lastHumidity) {
-    Serial.printf("Temperature did not changed. do nothing...!\r\n");
+    Serial.printf("Temperature did not change. do nothing...!\r\n");
     return; 
   }
 
