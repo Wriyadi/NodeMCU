@@ -10,7 +10,7 @@ const char* password = "PASSWORD";
 ESP8266WebServer server(80);
 
 // DHT Sensor setup
-#define DHTPIN 2     // D4 pin
+#define DHTPIN 15     // D8 pin
 #define DHTTYPE DHT22   // DHT 22 (AM2302)
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -28,7 +28,6 @@ String webpage;
 #define LED6 14  // D5
 #define LED7 12  // D6
 #define LED8 13  // D7
-#define LED9 15  // D8
 
 void setup() {
   Serial.begin(115200);
@@ -40,7 +39,6 @@ void setup() {
   pinMode(LED6, OUTPUT);
   pinMode(LED7, OUTPUT);
   pinMode(LED8, OUTPUT);
-  pinMode(LED9, OUTPUT);
 
   dht.begin();
 
@@ -66,7 +64,6 @@ void setup() {
   webpage += "<p>LED 6: <a href=\"LED6ON\"><button>ON</button></a><a href=\"LED6OFF\"><button>OFF</button></a></p>";
   webpage += "<p>LED 7: <a href=\"LED7ON\"><button>ON</button></a><a href=\"LED7OFF\"><button>OFF</button></a></p>";
   webpage += "<p>LED 8: <a href=\"LED8ON\"><button>ON</button></a><a href=\"LED8OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 9: <a href=\"LED9ON\"><button>ON</button></a><a href=\"LED9OFF\"><button>OFF</button></a></p>";
   webpage += "<p>Temperature: <span id=\"temperature\">--</span> &deg;C</p>";
   webpage += "<p>Humidity: <span id=\"humidity\">--</span> %</p>";
   webpage += "<script>setInterval(function() {fetch('/data').then(response => response.json()).then(data => {document.getElementById('temperature').innerText = data.temperature;document.getElementById('humidity').innerText = data.humidity;});}, 2000);</script>";
@@ -145,14 +142,6 @@ void setup() {
   server.on("/LED8OFF", []() {
     server.send(200, "text/html", webpage);
     digitalWrite(LED8, LOW);
-  });
-  server.on("/LED9ON", []() {
-    server.send(200, "text/html", webpage);
-    digitalWrite(LED9, HIGH);
-  });
-  server.on("/LED9OFF", []() {
-    server.send(200, "text/html", webpage);
-    digitalWrite(LED9, LOW);
   });
 
   server.begin();
