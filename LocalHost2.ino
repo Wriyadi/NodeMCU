@@ -56,14 +56,14 @@ void setup() {
 
   // Set up webpage content
   webpage += "<h1>Web Control LED ESP8266</h1>";
-  webpage += "<p>LED 1: <a href=\"LED1ON\"><button>ON</button></a><a href=\"LED1OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 2: <a href=\"LED2ON\"><button>ON</button></a><a href=\"LED2OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 3: <a href=\"LED3ON\"><button>ON</button></a><a href=\"LED3OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 4: <a href=\"LED4ON\"><button>ON</button></a><a href=\"LED4OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 5: <a href=\"LED5ON\"><button>ON</button></a><a href=\"LED5OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 6: <a href=\"LED6ON\"><button>ON</button></a><a href=\"LED6OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 7: <a href=\"LED7ON\"><button>ON</button></a><a href=\"LED7OFF\"><button>OFF</button></a></p>";
-  webpage += "<p>LED 8: <a href=\"LED8ON\"><button>ON</button></a><a href=\"LED8OFF\"><button>OFF</button></a></p>";
+  webpage += "<p>LED 1: <a href=\"LED1ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED1OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 2: <a href=\"LED2ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED2OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 3: <a href=\"LED3ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED3OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 4: <a href=\"LED4ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED4OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 5: <a href=\"LED5ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED5OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 6: <a href=\"LED6ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED6OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 7: <a href=\"LED7ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED7OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 8: <a href=\"LED8ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED8OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
   webpage += "<p>Temperature: <span id=\"temperature\">--</span> &deg;C</p>";
   webpage += "<p>Humidity: <span id=\"humidity\">--</span> %</p>";
   webpage += "<script>setInterval(function() {fetch('/data').then(response => response.json()).then(data => {document.getElementById('temperature').innerText = data.temperature;document.getElementById('humidity').innerText = data.humidity;});}, 2000);</script>";
