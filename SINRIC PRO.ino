@@ -10,7 +10,10 @@
 #include <SinricPro.h>
 #include <SinricProTemperaturesensor.h">
 #include <SinricProSwitch.h>
-#define DHT_PIN 2
+
+#define DHTPIN 2
+#define DHTTYPE DHT22
+
 #define RELAYPIN_1 16
 #define RELAYPIN_2 5
 #define RELAYPIN_3 4
@@ -21,7 +24,7 @@ float temperature;
 float humidity;
 float lastTemperature;                        // last known temperature (for compare)
 float lastHumidity;                           // last known humidity (for compare)
-DHT dht;
+DHT dht (DHTPIN, DHTTYPE);
 
 /*****************
  * Configuration *
