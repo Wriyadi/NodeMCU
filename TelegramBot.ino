@@ -64,32 +64,32 @@ void handleNewMessages(int numNewMessages) {
     }
 
     if (text == "/r1_on") {
-      bot.sendMessage(chat_id, "LED1 state set to ON", "");
+      bot.sendMessage(chat_id, "Relay 1 set to ON", "");
       digitalWrite(16, LOW);
     }
     
     if (text == "/r1_off") {
-      bot.sendMessage(chat_id, "LED1 state set to OFF", "");
+      bot.sendMessage(chat_id, "Relay 1 set to OFF", "");
       digitalWrite(16, HIGH);
     }
     
     if (text == "/r2_on") {
-      bot.sendMessage(chat_id, "LED2 state set to ON", "");
+      bot.sendMessage(chat_id, "Relay 2 set to ON", "");
       digitalWrite(5, LOW);
     }
     
     if (text == "/r2_off") {
-      bot.sendMessage(chat_id, "LED2 state set to OFF", "");
+      bot.sendMessage(chat_id, "Relay 2 set to OFF", "");
       digitalWrite(5, HIGH);
     }
 
     if (text == "/r3_on") {
-      bot.sendMessage(chat_id, "LED3 state set to ON", "");
+      bot.sendMessage(chat_id, "Relay 3 set to ON", "");
       digitalWrite(4, LOW);
     }
     
     if (text == "/r3_off") {
-      bot.sendMessage(chat_id, "LED3 state set to OFF", "");
+      bot.sendMessage(chat_id, "Relay 3 set to OFF", "");
       digitalWrite(4, HIGH);
     }
 
