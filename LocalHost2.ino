@@ -55,18 +55,28 @@ void setup() {
   Serial.println(WiFi.softAPIP());
 
   // Set up webpage content
+  webpage += "<!DOCTYPE html><html><head>";
+  webpage += "<style>";
+  webpage += "body { font-family: Arial, sans-serif; }";
+  webpage += "h1 { overflow: hidden; background-color: #049faa; color: white; font-size: 1rem; padding: 10px; }";
+  webpage += "button { padding: 10px; margin: 5px; font-size: 1rem; }";
+  webpage += "button.on { background-color: green; color: white; }";
+  webpage += "button.off { background-color: red; color: white; }";
+  webpage += "</style>";
+  webpage += "</head><body>";
   webpage += "<h1>Web Control LED ESP8266</h1>";
-  webpage += "<p>LED 1: <a href=\"LED1ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED1OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 2: <a href=\"LED2ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED2OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 3: <a href=\"LED3ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED3OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 4: <a href=\"LED4ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED4OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 5: <a href=\"LED5ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED5OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 6: <a href=\"LED6ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED6OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 7: <a href=\"LED7ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED7OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
-  webpage += "<p>LED 8: <a href=\"LED8ON\"><button style=\"background-color:green;color:white;\">ON</button></a><a href=\"LED8OFF\"><button style=\"background-color:red;color:white;\">OFF</button></a></p>";
+  webpage += "<p>LED 1: <a href=\"LED1ON\"><button class=\"on\">ON</button></a><a href=\"LED1OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 2: <a href=\"LED2ON\"><button class=\"on\">ON</button></a><a href=\"LED2OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 3: <a href=\"LED3ON\"><button class=\"on\">ON</button></a><a href=\"LED3OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 4: <a href=\"LED4ON\"><button class=\"on\">ON</button></a><a href=\"LED4OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 5: <a href=\"LED5ON\"><button class=\"on\">ON</button></a><a href=\"LED5OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 6: <a href=\"LED6ON\"><button class=\"on\">ON</button></a><a href=\"LED6OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 7: <a href=\"LED7ON\"><button class=\"on\">ON</button></a><a href=\"LED7OFF\"><button class=\"off\">OFF</button></a></p>";
+  webpage += "<p>LED 8: <a href=\"LED8ON\"><button class=\"on\">ON</button></a><a href=\"LED8OFF\"><button class=\"off\">OFF</button></a></p>";
   webpage += "<p>Temperature: <span id=\"temperature\">--</span> &deg;C</p>";
   webpage += "<p>Humidity: <span id=\"humidity\">--</span> %</p>";
   webpage += "<script>setInterval(function() {fetch('/data').then(response => response.json()).then(data => {document.getElementById('temperature').innerText = data.temperature;document.getElementById('humidity').innerText = data.humidity;});}, 2000);</script>";
+  webpage += "</body></html>";
 
   // Configure web server
   server.on("/", []() {
