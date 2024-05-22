@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - NodeMcu ESP8266 IoT Firebase</title>
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCUxxxx",
+      authDomain: "willyxxxx.firebaseapp.com",
+      databaseURL: "https://willyxxxx-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "willyxxxx",
+      storageBucket: "willyxxxx.appspot.com",
+      messagingSenderId: "22426xxxx",
+      appId: "1:22426xxxx:web:4a88a663b9e1xxxx"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Handle login
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('input-email').value;
+      const password = document.getElementById('input-password').value;
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          // Redirect to index.html on successful login
+          window.location.href = 'index.html';
+        })
+        .catch((error) => {
+          document.getElementById('error-message').innerText = error.message;
+        });
+    }
+  </script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+  <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+<body>
+  <!--TOP BAR-->
+  <div class="topnav">
+      <h1>NodeMCU ESP8266 GPIO Control <i class="fas fa-lightbulb"></i></h1>
+  </div>
+  <!--LOGIN FORM-->
+  <form id="login-form" onsubmit="handleLogin(event)">
+    <div class="form-elements-container">
+      <label for="input-email"><b>Email</b></label>
+      <input type="text" placeholder="Enter Email" id="input-email" required>
+
+      <label for="input-password"><b>Password</b></label>
+      <input type="password" placeholder="Enter Password" id="input-password" required>
+
+      <button type="submit" id="login-button">Login</button>
+      <p id="error-message" style="color:red;"></p>
+    </div>
+  </form>
+</body>
+</html>
