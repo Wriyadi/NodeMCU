@@ -1,0 +1,108 @@
+html {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    display: inline-block;
+    text-align: center;
+}
+
+body {
+    margin: 0;
+}
+
+/* Shared styles for top navigation */
+.topnav {
+    overflow: hidden;
+    background-color: #049faa;
+    color: white;
+    font-size: 1rem;
+    padding: 10px;
+}
+
+/* Styles for authentication bar */
+#authentication-bar {
+    background-color: mintcream;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* Styles for user details */
+#user-details {
+    color: cadetblue;
+}
+
+/* Styles for content */
+.content {
+    padding: 20px;
+}
+
+/* Styles for card grid */
+.card-grid {
+    max-width: 800px;
+    margin: 0 auto;
+    display: grid;
+    grid-gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Styles for cards */
+.card {
+    background-color: white;
+    box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, .5);
+}
+
+/* Styles for card title */
+.card-title {
+    font-size: 1.2rem;
+    color: #034078;
+}
+
+/* Styles for state */
+.state {
+    color: #1282A2;
+}
+
+/* Button styles */
+button {
+    background-color: #049faa;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* Button styles for ON state */
+.button-on {
+    background-color: #034078;
+}
+
+.button-on:hover {
+    background-color: #1282A2;
+}
+
+/* Button styles for OFF state */
+.button-off {
+    background-color: #858585;
+}
+
+.button-off:hover {
+    background-color: #252524;
+}
+
+/* Styles for form elements container */
+.form-elements-container {
+    padding: 16px;
+    width: 250px;
+    margin: 0 auto;
+}
+
+/* Styles for input fields */
+input[type=text],
+input[type=password] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
