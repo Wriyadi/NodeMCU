@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NodeMcu ESP8266 IoT Firebase</title>
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCUxxxx",
+      authDomain: "willyxxxx.firebaseapp.com",
+      databaseURL: "https://willyxxxx-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "willyxxxx",
+      storageBucket: "willyxxxx.appspot.com",
+      messagingSenderId: "22426xxxx",
+      appId: "1:22426xxxx:web:4a88a663b9e1xxxx"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // Check if user is logged in
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        setupUI(user);
+      } else {
+        // Redirect to login page if not logged in
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Handle logout
+    function handleLogout() {
+      auth.signOut().then(() => {
+        window.location.href = 'login.html';
+      });
+    }
+
+    // Setup UI for logged-in user
+    function setupUI(user) {
+      document.getElementById('user-details').innerText = user.email;
+
+      // Database references for temperature and humidity
+      const tempRef = database.ref('TempHum/temp');
+      const humRef = database.ref('TempHum/hum');
+
+      // Listen for changes in temperature data
+      tempRef.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+          const temperature = snapshot.val();
+          document.getElementById('temperature-value').textContent = temperature !== null ? temperature + ' °C' : 'N/A';
+        } else {
+          console.log("No temperature data available");
+        }
+      }, (error) => {
+        console.error("Error fetching temperature data:", error);
+      });
+
+      // Listen for changes in humidity data
+      humRef.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+          const humidity = snapshot.val();
+          document.getElementById('humidity-value').textContent = humidity !== null ? humidity + ' %' : 'N/A';
+        } else {
+          console.log("No humidity data available");
+        }
+      }, (error) => {
+        console.error("Error fetching humidity data:", error);
+      });
+
+      // Elements for GPIO states
+      const stateElements = Array.from({ length: 6 }, (_, i) => document.getElementById(`state${i + 1}`));
+
+      // Button Elements
+      const buttons = Array.from({ length: 6 }, (_, i) => ({
+        on: document.getElementById(`btn${i + 1}On`),
+        off: document.getElementById(`btn${i + 1}Off`)
+      }));
+
+      // Database paths for GPIO states
+      const dbPaths = Array.from({ length: 6 }, (_, i) => `Output/${[16, 5, 4, 0, 2, 14][i]}`);
+
+      // Database references
+      const dbRefs = dbPaths.map(path => database.ref(path));
+
+      // Update states depending on the database value
+      dbRefs.forEach((dbRef, i) => {
+        dbRef.on('value', (snapshot) => {
+          if (snapshot.exists()) {
+            stateElements[i].innerText = snapshot.val() === 1 ? "ON" : "OFF";
+          } else {
+            console.log(`No data available for GPIO ${i + 1}`);
+          }
+        }, (error) => {
+          console.error(error);
+        });
+      });
+
+      // Update database upon button click
+      buttons.forEach((btn, i) => {
+        btn.on.onclick = () => dbRefs[i].set(1);
+        btn.off.onclick = () => dbRefs[i].set(0);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('logout-button').addEventListener('click', handleLogout);
+    });
+  </script>
+
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+  <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+<body>
+  <!--TOP BAR-->
+  <div class="topnav">
+    <h1>NodeMCU ESP8266 GPIO Control <i class="fas fa-lightbulb"></i></h1>
+  </div>
+
+  <div id="authentication-bar">
+    <p><span id="authentication-status">User logged in</span>
+       <span id="user-details">USEREMAIL</span>
+       <button id="logout-button">Logout</button>
+    </p>
+  </div>
+
+  <!--CONTENT (SENSOR READINGS)-->
+  <div class="card-grid">
+    <!--CARD FOR GPIO 16-->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 16 </p>
+      <p>
+        <button class="button-on" id="btn1On">ON</button>
+        <button class="button-off" id="btn1Off">OFF</button>
+      </p>
+      <p class="state">State:<span id="state1"></span></p>
+    </div>
+
+    <!--CARD FOR GPIO 5-->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 5 </p>
+      <p>
+        <button class="button-on" id="btn2On">ON</button>
+        <button class="button-off" id="btn2Off">OFF</button>
+      </p>
+      <p class="state">State:<span id="state2"></span></p>
+    </div>
+
+    <!--CARD FOR GPIO 4-->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 4 </p>
+      <p>
+        <button class="button-on" id="btn3On">ON</button>
+        <button class="button-off" id="btn3Off">OFF</button>
+      </p>
+      <p class="state">State:<span id="state3"></span></p>
+    </div>
+
+    <!--CARD FOR GPIO 0-->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 0 </p>
+      <p>
+        <button class="button-on" id="btn4On">ON</button>
+        <button class="button-off" id="btn4Off">OFF</button>
+      </p>
+      <p class="state">State:<span id="state4"></span></p>
+    </div>
+
+    <!--CARD FOR GPIO 2-->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 2 </p>
+      <p>
+        <button class="button-on" id="btn5On">ON</button>
+        <button class="button-off" id="btn5Off">OFF</button>
+      </p>
+      <p class="state">State:<span id="state5"></span></p>
+    </div>
+
+    <!--CARD FOR GPIO 14-->
+    <div class="card">
+      <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 14 </p>
+      <p>
+        <button class="button-on" id="btn6On">ON</button>
+        <button class="button-off" id="btn6Off">OFF</button>
+      </p>
+      <p class="state">State:<span id="state6"></span></p>
+    </div>
+
+    <!--CARD FOR Temperature-->
+    <div class="card">
+      <p class="card-title"><i class="fa fa-thermometer-half"></i> Temperature </p>
+      <p id="temperature-value">Loading...</p>
+    </div>
+
+    <!--CARD FOR Humidity-->
+    <div class="card">
+      <p class="card-title"><i class="fa fa-tint"></i> Humidity </p>
+      <p id="humidity-value">Loading...</p>
+    </div>
+  </div>
+</body>
+</html>
