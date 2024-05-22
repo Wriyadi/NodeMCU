@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <Firebase_ESP_Client.h>
+#include <DHT.h>
 
 // Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -28,11 +29,22 @@ FirebaseConfig config;
 
 // Variables to save database paths
 String listenerPath = "/Output";
+String tempPath = "/TempHum/temp";
+String humPath = "/TempHum/hum";
 
 // Declare outputs
-const int Led1 = 16;
-const int Led2 = 5;
-const int Led3 = 4;
+const int Relay1 = 16;
+const int Relay2 = 5;
+const int Relay3 = 4;
+
+// DHT22
+#define DHTPIN 2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+// Variables to store the last sent temperature and humidity values
+float lastTemperature = NAN;
+float lastHumidity = NAN;
 
 // Initialize WiFi
 void initWiFi() {
@@ -113,9 +125,12 @@ void setup(){
   initWiFi();
 
   // Initialize Outputs
-  pinMode(Led1, OUTPUT);
-  pinMode(Led2, OUTPUT);
-  pinMode(Led3, OUTPUT);
+  pinMode(Relay1, OUTPUT);
+  pinMode(Relay2, OUTPUT);
+  pinMode(Relay3, OUTPUT);
+  
+  // Initialize DHT sensor
+  dht.begin();
   
   // Assign the api key (required)
   config.api_key = API_KEY;
@@ -150,8 +165,51 @@ void setup(){
 }
 
 void loop(){
+  // Read temperature and humidity
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  // Print the results
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  // Upload temperature and humidity to Firebase only if values have changed
+  if (temperature != lastTemperature) {
+    if (Firebase.RTDB.setFloat(&stream, tempPath.c_str(), temperature)) {
+      Serial.println("Temperature data uploaded successfully.");
+      lastTemperature = temperature;
+    } else {
+      Serial.println("Failed to upload temperature data.");
+      Serial.println(stream.errorReason());
+    }
+  }
+
+  if (humidity != lastHumidity) {
+    if (Firebase.RTDB.setFloat(&stream, humPath.c_str(), humidity)) {
+      Serial.println("Humidity data uploaded successfully.");
+      lastHumidity = humidity;
+    } else {
+      Serial.println("Failed to upload humidity data.");
+      Serial.println(stream.errorReason());
+    }
+  }
+
+  // Check if token is expired and refresh if necessary
   if (Firebase.isTokenExpired()){
     Firebase.refreshToken(&config);
     Serial.println("Refresh token");
   }
+
+  // Add a delay to avoid flooding the database
+  delay(2000); // Adjust the delay as needed
 }
