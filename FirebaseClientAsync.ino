@@ -33,12 +33,12 @@ DHT dht(DHTPIN, DHTTYPE);
 #define WIFI_PASSWORD "UNAMAWillY"
 
 // The API key can be obtained from Firebase console > Project Overview > Project settings.
-#define API_KEY "AIzaSyCUxxRRqSjTVqplZC7KiWPHsznm_Bhodf4"
+#define API_KEY "AIzaSxxxxx"
 
 // User Email and password that already registerd or added in your project.
 #define USER_EMAIL "wriyadi5@gmail.com"
-#define USER_PASSWORD "UNAMAWillY"
-#define DATABASE_URL "https://willyproject-6cb9f-default-rtdb.asia-southeast1.firebasedatabase.app/"
+#define USER_PASSWORD "xxxxxx"
+#define DATABASE_URL "https://willyproject-xxxxx.asia-southeast1.firebasedatabase.app/"
 
 void asyncCB(AsyncResult &aResult);
 
