@@ -164,8 +164,8 @@ void setup(){
   delay(2000);
 }
 
-void loop(){
-  // Read temperature and humidity
+void updateTempHum(){
+// Read temperature and humidity
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
 
@@ -219,7 +219,10 @@ void loop(){
   } else {
     humReadError = false;
   }
+}
 
+void loop(){
+  updateTempHum();
   // Check if token is expired and refresh if necessary
   if (Firebase.isTokenExpired()){
     Firebase.refreshToken(&config);
