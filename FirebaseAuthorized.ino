@@ -31,20 +31,29 @@ FirebaseConfig config;
 String listenerPath = "/Output";
 String tempPath = "/TempHum/temp";
 String humPath = "/TempHum/hum";
+String chaser1Path = "/Output/Chaser1";
+String chaser2Path = "/Output/Chaser2";
 
 // Declare outputs
 const int Relay1 = 16;
 const int Relay2 = 5;
 const int Relay3 = 4;
+const int Relay4 = 0;
+const int Relay5 = 2;
+const int Relay6 = 14;
 
 // DHT22
-#define DHTPIN 2
+#define DHTPIN 12
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
 // Variables to store the last sent temperature and humidity values
 float lastTemperature = NAN;
 float lastHumidity = NAN;
+
+// Flag to control the LED chaser
+bool chaser1Running = false;
+bool chaser2Running = false;
 
 // Initialize WiFi
 void initWiFi() {
@@ -80,6 +89,44 @@ void streamCallback(FirebaseStream data){
     Serial.print("STATE: ");
     Serial.println(state);
     digitalWrite(gpio.toInt(), state);
+  }
+
+  // Handle Chaser1 logic
+  if (streamPath == "/Chaser1") {
+    int chaser1State = data.intData();
+    if (chaser1State == 1) {
+      chaser1Running = true;
+      Serial.println("Chaser1 started.");
+    } else {
+      chaser1Running = false;
+      Serial.println("Chaser1 stopped.");
+      // Turn off all relays
+      digitalWrite(Relay1, LOW);
+      digitalWrite(Relay2, LOW);
+      digitalWrite(Relay3, LOW);
+      digitalWrite(Relay4, LOW);
+      digitalWrite(Relay5, LOW);
+      digitalWrite(Relay6, LOW);
+    }
+  }
+
+  // Handle Chaser1 logic
+  if (streamPath == "/Chaser2") {
+    int chaser2State = data.intData();
+    if (chaser2State == 1) {
+      chaser2Running = true;
+      Serial.println("Chaser2 started.");
+    } else {
+      chaser2Running = false;
+      Serial.println("Chaser2 stopped.");
+      // Turn off all relays
+      digitalWrite(Relay1, LOW);
+      digitalWrite(Relay2, LOW);
+      digitalWrite(Relay3, LOW);
+      digitalWrite(Relay4, LOW);
+      digitalWrite(Relay5, LOW);
+      digitalWrite(Relay6, LOW);
+    }
   }
 
   /* When it first runs, it is triggered on the root (/) path and returns a JSON with all keys
@@ -128,6 +175,9 @@ void setup(){
   pinMode(Relay1, OUTPUT);
   pinMode(Relay2, OUTPUT);
   pinMode(Relay3, OUTPUT);
+  pinMode(Relay4, OUTPUT);
+  pinMode(Relay5, OUTPUT);
+  pinMode(Relay6, OUTPUT);
   
   // Initialize DHT sensor
   dht.begin();
@@ -165,70 +215,94 @@ void setup(){
 }
 
 void updateTempHum(){
-// Read temperature and humidity
+  // Read temperature and humidity
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
 
   // Check if any reads failed and exit early (to try again).
   if (isnan(temperature) || isnan(humidity)) {
-    if (!tempReadError || !humReadError) {
-      Serial.println("Failed to read from DHT sensor!");
-      tempReadError = true;
-      humReadError = true;
-    }
+    Serial.println("Failed to read from DHT sensor!");
     return;
-  } else {
-    // Reset error flags if a successful read occurs
-    tempReadError = false;
-    humReadError = false;
   }
 
-  // Upload temperature and humidity to Firebase and Serial Monitor only if values have changed
+  // Update temperature to Firebase and Serial Monitor only if value has changed
   if (temperature != lastTemperature) {
     if (Firebase.RTDB.setFloat(&stream, tempPath.c_str(), temperature)) {
       Serial.println("Temperature data uploaded successfully.");
       Serial.print("Temperature: ");
       Serial.print(temperature);
       Serial.println(" °C");
-      lastTemperature = temperature;
     } else {
-      if (!tempReadError) {
-        Serial.println("Failed to upload temperature data.");
-        Serial.println(stream.errorReason());
-        tempReadError = true;
-      }
+      Serial.println("Failed to upload temperature data.");
+      Serial.println(stream.errorReason());
     }
-  } else {
-    tempReadError = false;
+    lastTemperature = temperature;
   }
 
+  // Update humidity to Firebase and Serial Monitor only if value has changed
   if (humidity != lastHumidity) {
     if (Firebase.RTDB.setFloat(&stream, humPath.c_str(), humidity)) {
       Serial.println("Humidity data uploaded successfully.");
       Serial.print("Humidity: ");
       Serial.print(humidity);
       Serial.println(" %");
-      lastHumidity = humidity;
     } else {
-      if (!humReadError) {
-        Serial.println("Failed to upload humidity data.");
-        Serial.println(stream.errorReason());
-        humReadError = true;
-      }
+      Serial.println("Failed to upload humidity data.");
+      Serial.println(stream.errorReason());
     }
-  } else {
-    humReadError = false;
+    lastHumidity = humidity;
   }
 }
 
+
 void loop(){
   updateTempHum();
+
+  if (chaser1Running) {
+    // Chaser sequence
+    digitalWrite(Relay1, HIGH);
+    delay(500);
+    digitalWrite(Relay1, LOW);
+    digitalWrite(Relay2, HIGH);
+    delay(500);
+    digitalWrite(Relay2, LOW);
+    digitalWrite(Relay3, HIGH);
+    delay(500);
+    digitalWrite(Relay3, LOW);
+    digitalWrite(Relay4, HIGH);
+    delay(500);
+    digitalWrite(Relay4, LOW);
+    digitalWrite(Relay5, HIGH);
+    delay(500);
+    digitalWrite(Relay5, LOW);
+    digitalWrite(Relay6, HIGH);
+    delay(500);
+    digitalWrite(Relay6, LOW);
+  }
+
+  if (chaser2Running) {
+    // Chaser sequence
+    digitalWrite(Relay1, HIGH);
+    digitalWrite(Relay6, HIGH);
+    delay(500);
+    digitalWrite(Relay1, LOW);
+    digitalWrite(Relay6, LOW);
+    digitalWrite(Relay2, HIGH);
+    digitalWrite(Relay5, HIGH);
+    delay(500);
+    digitalWrite(Relay2, LOW);
+    digitalWrite(Relay5, LOW);
+    digitalWrite(Relay3, HIGH);
+    digitalWrite(Relay4, HIGH);
+    delay(500);
+    digitalWrite(Relay3, LOW);
+    digitalWrite(Relay4, LOW);
+    delay(500);
+  }
+  
   // Check if token is expired and refresh if necessary
   if (Firebase.isTokenExpired()){
     Firebase.refreshToken(&config);
     Serial.println("Refresh token");
   }
-
-  // Add a delay to avoid flooding the database
-  delay(2000); // Adjust the delay as needed
 }
