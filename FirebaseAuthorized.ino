@@ -171,37 +171,53 @@ void loop(){
 
   // Check if any reads failed and exit early (to try again).
   if (isnan(temperature) || isnan(humidity)) {
-    Serial.println("Failed to read from DHT sensor!");
+    if (!tempReadError || !humReadError) {
+      Serial.println("Failed to read from DHT sensor!");
+      tempReadError = true;
+      humReadError = true;
+    }
     return;
+  } else {
+    // Reset error flags if a successful read occurs
+    tempReadError = false;
+    humReadError = false;
   }
 
-  // Print the results
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.println(" °C");
-  Serial.print("Humidity: ");
-  Serial.print(humidity);
-  Serial.println(" %");
-
-  // Upload temperature and humidity to Firebase only if values have changed
+  // Upload temperature and humidity to Firebase and Serial Monitor only if values have changed
   if (temperature != lastTemperature) {
     if (Firebase.RTDB.setFloat(&stream, tempPath.c_str(), temperature)) {
       Serial.println("Temperature data uploaded successfully.");
+      Serial.print("Temperature: ");
+      Serial.print(temperature);
+      Serial.println(" °C");
       lastTemperature = temperature;
     } else {
-      Serial.println("Failed to upload temperature data.");
-      Serial.println(stream.errorReason());
+      if (!tempReadError) {
+        Serial.println("Failed to upload temperature data.");
+        Serial.println(stream.errorReason());
+        tempReadError = true;
+      }
     }
+  } else {
+    tempReadError = false;
   }
 
   if (humidity != lastHumidity) {
     if (Firebase.RTDB.setFloat(&stream, humPath.c_str(), humidity)) {
       Serial.println("Humidity data uploaded successfully.");
+      Serial.print("Humidity: ");
+      Serial.print(humidity);
+      Serial.println(" %");
       lastHumidity = humidity;
     } else {
-      Serial.println("Failed to upload humidity data.");
-      Serial.println(stream.errorReason());
+      if (!humReadError) {
+        Serial.println("Failed to upload humidity data.");
+        Serial.println(stream.errorReason());
+        humReadError = true;
+      }
     }
+  } else {
+    humReadError = false;
   }
 
   // Check if token is expired and refresh if necessary
