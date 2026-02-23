@@ -72,8 +72,8 @@ void sendSensor() {
   }
   
   // Mengirim data ke Virtual Pin Blynk
-  Blynk.virtualWrite(V4, h); // Kelembaban ke V4
-  Blynk.virtualWrite(V5, t); // Suhu ke V5 (DIPERBAIKI: Sebelumnya tabrakan di V3)
+  Blynk.virtualWrite(V4, h); 
+  Blynk.virtualWrite(V5, t); 
 }
 
 void setup() {
