@@ -1,135 +1,149 @@
-#include <ESP8266WiFi.h>
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
+#elif defined(ESP32)
+  #include <WiFi.h>
+#endif
+
 #include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>   // Universal Telegram Bot Library written by Brian Lough: https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot
+#include <UniversalTelegramBot.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
 
-#define DHTPIN 2
-#define DHTTYPE DHT22
-DHT dht(DHTPIN, DHTTYPE);
+// --- KONFIGURASI PIN UNIVERSAL ---
+// Menggunakan pin yang aman untuk masing-masing board
+#if defined(ESP8266)
+  #define DHTPIN 2
+  #define RELAY1_PIN 16
+  #define RELAY2_PIN 5
+  #define RELAY3_PIN 4
+  #define RELAY4_PIN 0
+#elif defined(ESP32)
+  #define DHTPIN 4
+  #define RELAY1_PIN 26
+  #define RELAY2_PIN 27
+  #define RELAY3_PIN 32
+  #define RELAY4_PIN 33
+#endif
 
-// Replace with your network credentials
+#define DHTTYPE DHT22
+
+// --- KONFIGURASI JARINGAN & BOT ---
 const char* ssid = "SSID";
 const char* password = "Password";
+#define BOTtoken "6219478371:AAF0UP4GDxxxxx" 
+#define CHAT_ID "875xxxxx"
 
-// Initialize Telegram BOT
-#define BOTtoken "621947xxx:AAF0UP4GDzzclhDtFtP20UWXIa06_xxx"  // your Bot Token (Get from Botfather)
-
-// Use @myidbot to find out the chat ID of an individual or a group
-// Also note that you need to click "start" on a bot before it can
-// message you
-#define CHAT_ID "87558xxx"
-
-X509List cert(TELEGRAM_CERTIFICATE_ROOT);
-
+// --- INISIALISASI OBJEK ---
+DHT dht(DHTPIN, DHTTYPE);
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-// Checks for new messages every 0,5 second.
+// Sertifikat SSL Telegram untuk ESP8266
+#if defined(ESP8266)
+  X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+#endif
+
+// Variabel delay dan timer
 int botRequestDelay = 500;
 unsigned long lastTimeBotRan;
 
-// Handle what happens when you receive new messages
+// --- FUNGSI HANDLE PESAN ---
 void handleNewMessages(int numNewMessages) {
-  Serial.println("handleNewMessages");
-  Serial.println(String(numNewMessages));
+  Serial.print("Menangani pesan baru: ");
+  Serial.println(numNewMessages);
 
-  for (int i=0; i<numNewMessages; i++) {
-    // Chat id of the requester
+  for (int i = 0; i < numNewMessages; i++) {
     String chat_id = String(bot.messages[i].chat_id);
-    if (chat_id != CHAT_ID){
-      bot.sendMessage(chat_id, "Unauthorized user", "");
+    
+    // Validasi User
+    if (chat_id != CHAT_ID) {
+      bot.sendMessage(chat_id, "Akses Ditolak. Anda bukan pengguna yang sah.", "");
       continue;
     }
 
-    // Print the received message
     String text = bot.messages[i].text;
-    Serial.println(text);
-
     String from_name = bot.messages[i].from_name;
+    Serial.println("Pesan diterima: " + text);
 
     if (text == "/start") {
-      String welcome = "Welcome, " + from_name + ".\n";
-      welcome += "Use the following commands to control your outputs.\n\n";
-      welcome += "/r1_on to turn GPIO ON \n";
-      welcome += "/r1_off to turn GPIO OFF \n";
-      welcome += "/r2_on to turn GPIO ON \n";
-      welcome += "/r2_off to turn GPIO OFF \n";
-      welcome += "/r3_on to turn GPIO ON \n";
-      welcome += "/r3_off to turn GPIO OFF \n";
-      welcome += "/temp to get temperature data \n";
-      welcome += "/hum to get humidity data \n";
-      welcome += "/state to request current GPIO state \n";
+      String welcome = "Halo, " + from_name + ".\n";
+      welcome += "Gunakan perintah berikut untuk kontrol:\n\n";
+      welcome += "/r1_on - Nyalakan Relay 1\n";
+      welcome += "/r1_off - Matikan Relay 1\n";
+      welcome += "/r2_on - Nyalakan Relay 2\n";
+      welcome += "/r2_off - Matikan Relay 2\n";
+      welcome += "/r3_on - Nyalakan Relay 3\n";
+      welcome += "/r3_off - Matikan Relay 3\n";
+      welcome += "/r4_on - Nyalakan Relay 4\n";
+      welcome += "/r4_off - Matikan Relay 4\n";
+      welcome += "/temp - Cek Suhu\n";
+      welcome += "/hum - Cek Kelembaban\n";
+      welcome += "/state - Cek Status Relay\n";
       bot.sendMessage(chat_id, welcome, "");
     }
 
-    if (text == "/r1_on") {
-      bot.sendMessage(chat_id, "Relay 1 set to ON", "");
-      digitalWrite(16, LOW);
-    }
-    
-    if (text == "/r1_off") {
-      bot.sendMessage(chat_id, "Relay 1 set to OFF", "");
-      digitalWrite(16, HIGH);
-    }
-    
-    if (text == "/r2_on") {
-      bot.sendMessage(chat_id, "Relay 2 set to ON", "");
-      digitalWrite(5, LOW);
-    }
-    
-    if (text == "/r2_off") {
-      bot.sendMessage(chat_id, "Relay 2 set to OFF", "");
-      digitalWrite(5, HIGH);
+    // Kontrol Relay 1
+    else if (text == "/r1_on") {
+      digitalWrite(RELAY1_PIN, LOW);
+      bot.sendMessage(chat_id, "Relay 1 diatur ke ON", "");
+    } else if (text == "/r1_off") {
+      digitalWrite(RELAY1_PIN, HIGH);
+      bot.sendMessage(chat_id, "Relay 1 diatur ke OFF", "");
     }
 
-    if (text == "/r3_on") {
-      bot.sendMessage(chat_id, "Relay 3 set to ON", "");
-      digitalWrite(4, LOW);
-    }
-    
-    if (text == "/r3_off") {
-      bot.sendMessage(chat_id, "Relay 3 set to OFF", "");
-      digitalWrite(4, HIGH);
+    // Kontrol Relay 2
+    else if (text == "/r2_on") {
+      digitalWrite(RELAY2_PIN, LOW);
+      bot.sendMessage(chat_id, "Relay 2 diatur ke ON", "");
+    } else if (text == "/r2_off") {
+      digitalWrite(RELAY2_PIN, HIGH);
+      bot.sendMessage(chat_id, "Relay 2 diatur ke OFF", "");
     }
 
-    if (text == "/temp") {
+    // Kontrol Relay 3
+    else if (text == "/r3_on") {
+      digitalWrite(RELAY3_PIN, LOW);
+      bot.sendMessage(chat_id, "Relay 3 diatur ke ON", "");
+    } else if (text == "/r3_off") {
+      digitalWrite(RELAY3_PIN, HIGH);
+      bot.sendMessage(chat_id, "Relay 3 diatur ke OFF", "");
+    }
+
+    // Kontrol Relay 4
+    else if (text == "/r4_on") {
+      digitalWrite(RELAY4_PIN, LOW);
+      bot.sendMessage(chat_id, "Relay 4 diatur ke ON", "");
+    } else if (text == "/r4_off") {
+      digitalWrite(RELAY4_PIN, HIGH);
+      bot.sendMessage(chat_id, "Relay 4 diatur ke OFF", "");
+    }
+
+    // Sensor DHT
+    else if (text == "/temp") {
       float temperature = dht.readTemperature();
       if (!isnan(temperature)) {
-        bot.sendMessage(chat_id, "Temperature: " + String(temperature) + " °C", "");
+        bot.sendMessage(chat_id, "Suhu saat ini: " + String(temperature) + " °C", "");
       } else {
-        bot.sendMessage(chat_id, "Failed to read temperature data", "");
+        bot.sendMessage(chat_id, "Gagal membaca data suhu dari sensor.", "");
+      }
+    } else if (text == "/hum") {
+      float humidity = dht.readHumidity();
+      if (!isnan(humidity)) {
+        bot.sendMessage(chat_id, "Kelembaban saat ini: " + String(humidity) + " %", "");
+      } else {
+        bot.sendMessage(chat_id, "Gagal membaca data kelembaban dari sensor.", "");
       }
     }
 
-    if (text == "/hum") {
-      float humidity = dht.readHumidity();
-      if (!isnan(humidity)) {
-        bot.sendMessage(chat_id, "Humidity: " + String(humidity) + " %", "");
-      } else {
-        bot.sendMessage(chat_id, "Failed to read humidity data", "");
-      }
-    }
-    
-    if (text == "/state") {
-      if (digitalRead(16)==LOW){
-        bot.sendMessage(chat_id, "RELAY 1 is ON", "");
-      }
-      else {
-        bot.sendMessage(chat_id, "RELAY 1 is OFF", "");
-      }
-      if (digitalRead(5)==LOW){
-        bot.sendMessage(chat_id, "RELAY 2 is ON", "");
-      }
-      else {
-        bot.sendMessage(chat_id, "RELAY 2 is OFF", "");
-      }
-      if (digitalRead(4)==LOW){
-        bot.sendMessage(chat_id, "RELAY 3 is ON", "");
-      }
-      else {
-        bot.sendMessage(chat_id, "RELAY 3 is OFF", "");
-      }
+    // Cek Status Keseluruhan
+    else if (text == "/state") {
+      String statusMsg = "Status Perangkat Saat Ini:\n\n";
+      statusMsg += "Relay 1: " + String(digitalRead(RELAY1_PIN) == LOW ? "ON" : "OFF") + "\n";
+      statusMsg += "Relay 2: " + String(digitalRead(RELAY2_PIN) == LOW ? "ON" : "OFF") + "\n";
+      statusMsg += "Relay 3: " + String(digitalRead(RELAY3_PIN) == LOW ? "ON" : "OFF") + "\n";
+      statusMsg += "Relay 4: " + String(digitalRead(RELAY4_PIN) == LOW ? "ON" : "OFF");
+      
+      bot.sendMessage(chat_id, statusMsg, "");
     }
   }
 }
@@ -137,27 +151,47 @@ void handleNewMessages(int numNewMessages) {
 void setup() {
   Serial.begin(115200);
 
-  configTime(0, 0, "pool.ntp.org");      // get UTC time via NTP
-  client.setTrustAnchors(&cert); // Add root certificate for api.telegram.org
+  // Inisialisasi Sensor DHT
+  dht.begin();
 
-  pinMode(16, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(2, INPUT);
+  // Konfigurasi SSL Universal untuk Telegram
+  #if defined(ESP8266)
+    configTime(0, 0, "pool.ntp.org");      // get UTC time via NTP
+    client.setTrustAnchors(&cert);         // Add root certificate for ESP8266
+  #elif defined(ESP32)
+    client.setCACert(TELEGRAM_CERTIFICATE_ROOT); // Add root certificate for ESP32
+  #endif
+
+  // Inisialisasi Pin
+  pinMode(RELAY1_PIN, OUTPUT);
+  pinMode(RELAY2_PIN, OUTPUT);
+  pinMode(RELAY3_PIN, OUTPUT);
+  pinMode(RELAY4_PIN, OUTPUT);
   
-  digitalWrite(16, HIGH);
-  digitalWrite(5, HIGH);
-  digitalWrite(4, HIGH);
+  // Set kondisi awal relay NPN (Active LOW berarti HIGH adalah kondisi mati/awal)
+  digitalWrite(RELAY1_PIN, HIGH);
+  digitalWrite(RELAY2_PIN, HIGH);
+  digitalWrite(RELAY3_PIN, HIGH);
+  digitalWrite(RELAY4_PIN, HIGH);
 
   // Connect to Wi-Fi
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
+  Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.println("Connecting to WiFi..");
+    Serial.print(".");
   }
-  // Print ESP32 Local IP Address
+  Serial.println("");
+  Serial.println("WiFi Terhubung!");
+  
+  #if defined(ESP8266)
+    Serial.print("ESP8266 Local IP Address: ");
+  #elif defined(ESP32)
+    Serial.print("ESP32 Local IP Address: ");
+  #endif
+  
   Serial.println(WiFi.localIP());
 }
 
@@ -165,8 +199,7 @@ void loop() {
   if (millis() > lastTimeBotRan + botRequestDelay)  {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
 
-    while(numNewMessages) {
-      Serial.println("got response");
+    while (numNewMessages) {
       handleNewMessages(numNewMessages);
       numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     }
