@@ -5,26 +5,34 @@
 #endif
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
+
+// --- DETEKSI OTOMATIS ARSITEKTUR BOARD ---
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
+#elif defined(ESP32)
+  #include <WiFi.h>
+#endif
+// -----------------------------------------
+
 #include <DHT.h>
 #include <SinricPro.h>
-#include <SinricProTemperaturesensor.h">
+#include <SinricProThermostat.h> 
 #include <SinricProSwitch.h>
 
+// Catatan Pin: Pastikan pin ini aman digunakan untuk board spesifik Anda
 #define DHTPIN 2
 #define DHTTYPE DHT22
 
 #define RELAYPIN_1 16
 #define RELAYPIN_2 5
 #define RELAYPIN_3 4
-#define TEMP_SENSOR_ID "643667f39xxxx"
-#define EVENT_WAIT_TIME 10000  // send event every 10 seconds
+#define EVENT_WAIT_TIME 10000  // Kirim event setiap 10 detik
 
 float temperature;
 float humidity;
-float lastTemperature;                        // last known temperature (for compare)
-float lastHumidity;                           // last known humidity (for compare)
-DHT dht (DHTPIN, DHTTYPE);
+float lastTemperature;                        
+float lastHumidity;                           
+DHT dht(DHTPIN, DHTTYPE);
 
 /*****************
  * Configuration *
@@ -37,36 +45,20 @@ struct RelayInfo {
 };
 
 std::vector<RelayInfo> relays = {
-    {"643667f3918a3c91cxxx", "Relay 1", RELAYPIN_1},
+    {"ID_THERMOSTAT_BARU_ANDA", "Relay 1 & Suhu", RELAYPIN_1}, 
     {"643668a3312d40edcxxx", "Relay 2", RELAYPIN_2},
     {"643668cd918a3c911xxx", "Relay 3", RELAYPIN_3},
 };
-/*   ^^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^  ^^^
- *              |                     |      |
- *              |                     |      +---> digital PIN or GPIO number (see Note below!)
- *              |                     +----------> Name that will be printed to serial monitor
- *              +--------------------------------> deviceId
- * 
- *  In the vector above, you can add as many relays you want to have
- *  This is only limited to:
- *    - the number of SinricPro devices you have available
- *    - the number of pins / GPIOs your board have
- *
- *  Note: Some GPIO's are set to specific level when the board boots up
- *        This might result in strange behavior if there are relays connected to those pins
- *        Check your board documentation!
- */
 
 #define WIFI_SSID  "SSID"
 #define WIFI_PASS  "PASSWORD"
-#define APP_KEY    "ae5f7d54-9a3c-4fea-8f64-xxx"    // Should look like "de0bxxxx-1x3x-4x3x-ax2x-5dabxxxxxxxx"
-#define APP_SECRET "21f85ec4-f0d4-4fd7-b7fd-xxx" // Should look like "5f36xxxx-x3x7-4x3x-xexe-e86724a9xxxx-4c4axxxx-3x3x-x5xe-x9x3-333d65xxxxxx"
+#define APP_KEY    "ae5f7d54-9a3c-4fea-8f64-xxx"    
+#define APP_SECRET "21f85ec4-f0d4-4fd7-b7fd-xxx" 
 
-#define BAUD_RATE  115200              // Change baudrate to your need
+#define BAUD_RATE  115200              
 
 void handleTemperaturesensor() {
   if (!SinricPro.isConnected()) {
-    Serial.printf("Not connected to Sinric Pro...!\r\n");
     return; 
   }
 
@@ -75,36 +67,36 @@ void handleTemperaturesensor() {
   if (last_millis && current_millis - last_millis < EVENT_WAIT_TIME) return;
   last_millis = current_millis;
   
-  temperature = dht.readTemperature();          // get actual temperature in °C
-  humidity = dht.readHumidity();                // get actual humidity
+  temperature = dht.readTemperature();          
+  humidity = dht.readHumidity();                
 
-  if (isnan(temperature) || isnan(humidity)) { // reading failed... 
-    Serial.printf("DHT reading failed!\r\n");  // print error message
-    return;                                    // try again next time
+  if (isnan(temperature) || isnan(humidity)) { 
+    Serial.printf("DHT reading failed!\r\n");  
+    return;                                    
   } 
 
-  Serial.printf("Temperature: %2.1f Celsius\tHumidity: %2.1f%%\r\n", temperature, humidity);
-
   if (temperature == lastTemperature && humidity == lastHumidity) {
-    Serial.printf("Temperature did not change. do nothing...!\r\n");
     return; 
   }
 
-  SinricProTemperaturesensor &mySensor = SinricPro[TEMP_SENSOR_ID];  // get temperaturesensor device
-  bool success = mySensor.sendTemperatureEvent(temperature, humidity); // send event
+  Serial.printf("Temperature: %2.1f Celsius\tHumidity: %2.1f%%\r\n", temperature, humidity);
+
+  SinricProThermostat &myThermostat = SinricPro[relays[0].deviceId];  
+  bool success = myThermostat.sendTemperatureEvent(temperature, humidity); 
+  
   if (success) {  
     Serial.printf("Sent!\r\n");
   } else {
-    Serial.printf("Something went wrong...could not send Event to server!\r\n"); // Enable ENABLE_DEBUG to see why
+    Serial.printf("Something went wrong...could not send Event to server!\r\n"); 
   }
 
-  lastTemperature = temperature;  // save actual temperature for next compare
-  lastHumidity = humidity;        // save actual humidity for next compare 
+  lastTemperature = temperature;  
+  lastHumidity = humidity;        
 }
 
 void setupRelayPins() {
-  for (auto &relay : relays) {    // for each relay configuration
-    pinMode(relay.pin, OUTPUT);     // set pinMode to OUTPUT
+  for (auto &relay : relays) {    
+    pinMode(relay.pin, OUTPUT);     
   }
 }
 
@@ -120,20 +112,25 @@ void setupWiFi() {
 }
 
 bool onPowerState(const String &deviceId, bool &state) {
-  for (auto &relay : relays) {                                                            // for each relay configuration
-    if (deviceId == relay.deviceId) {                                                       // check if deviceId matches
-      Serial.printf("Device %s turned %s\r\n", relay.name.c_str(), state ? "on" : "off");     // print relay name and state to serial
-      digitalWrite(relay.pin, state);                                                         // set state to digital pin / gpio
-      return true;                                                                            // return with success true
+  for (auto &relay : relays) {                                                        
+    if (deviceId == relay.deviceId) {                                                 
+      Serial.printf("Device %s turned %s\r\n", relay.name.c_str(), state ? "on" : "off");     
+      digitalWrite(relay.pin, state);                                                   
+      return true;                                                                    
     }
   }
-  return false; // if no relay configuration was found, return false
+  return false; 
 }
 
 void setupSinricPro() {
-  for (auto &relay : relays) {                             // for each relay configuration
-    SinricProSwitch &mySwitch = SinricPro[relay.deviceId];   // create a new device with deviceId from relay configuration
-    mySwitch.onPowerState(onPowerState);                     // attach onPowerState callback to the new device
+  // 1. Setup Relay 1 sebagai Thermostat (Suhu + Switch)
+  SinricProThermostat &thermostat = SinricPro[relays[0].deviceId];
+  thermostat.onPowerState(onPowerState); 
+
+  // 2. Setup Relay 2 dan Relay 3 sebagai Switch standar
+  for (size_t i = 1; i < relays.size(); i++) {                             
+    SinricProSwitch &mySwitch = SinricPro[relays[i].deviceId];   
+    mySwitch.onPowerState(onPowerState);                     
   }
 
   SinricPro.onConnected([]() { Serial.printf("Connected to SinricPro\r\n"); });
@@ -147,7 +144,7 @@ void setup() {
   setupRelayPins();
   setupWiFi();
   setupSinricPro();
-  dht.setup(DHT_PIN);
+  dht.begin(); 
 }
 
 void loop() {
