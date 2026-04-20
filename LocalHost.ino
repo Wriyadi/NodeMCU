@@ -1,278 +1,218 @@
-include <ESP8266WiFi.h>
+/*********************************************************
+ * ESP8266 / ESP32 - Local WebServer 3 Relay + DHT22
+ * NPN Transistor Relay (ACTIVE HIGH)
+ * Fully Cross-Platform Compatible
+ *********************************************************/
 
-// Replace with your network credentials
-const char* ssid     = "SSID";
-const char* password = "PASSWORD";
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
+#elif defined(ESP32)
+  #include <WiFi.h>
+#else
+  #error "Unsupported board"
+#endif
 
-// Set web server port number to 80
+#include <DHT.h> // Tambahkan library DHT
+
+/******************** WIFI CONFIG ********************/
+const char* ssid     = "NAMA_WIFI_ANDA";
+const char* password = "PASSWORD_WIFI";
+
+/******************** WEB SERVER *********************/
 WiFiServer server(80);
-
-// Variable to store the HTTP request
 String header;
 
-// Auxiliar variables to store the current output state
-String output8State = "off";
-String output7State = "off";
-String output6State = "off";
-String output5State = "off";
-String output4State = "off";
-String output3State = "off";
-String output2State = "off";
-String output1State = "off";
+/******************** PIN CONFIG *********************/
+// Konfigurasi Pin Relay
+#if defined(ESP8266)
+const uint8_t RELAY1 = 5;   // D1
+const uint8_t RELAY2 = 4;   // D2
+const uint8_t RELAY3 = 14;  // D5
+#elif defined(ESP32)
+const uint8_t RELAY1 = 16;
+const uint8_t RELAY2 = 5;
+const uint8_t RELAY3 = 4;
+#endif
 
-// Assign output variables to GPIO pins
-const int output8 = 13;
-const int output7 = 12;
-const int output6 = 14;
-const int output5 = 2;
-const int output4 = 0;
-const int output3 = 4;
-const int output2 = 5;
-const int output1 = 16;
+// Konfigurasi Pin DHT22 (Aman untuk ESP8266 dan ESP32)
+#define DHTPIN 2 
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
+/******************** STATE & TIMEOUT ****************/
+String relay1State = "OFF";
+String relay2State = "OFF";
+String relay3State = "OFF";
 
-// Current time
-unsigned long currentTime = millis();
-// Previous time
-unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 2000;
+unsigned long previousTime = 0;
+const unsigned long timeoutTime = 2000;
 
+/******************** HTML + CSS *********************/
+// Menambahkan Card untuk Suhu dan Kelembaban
+const char html_page[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP Control Panel</title>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+<style>
+html{font-family:Arial;text-align:center;background:#f1f1f1}
+body{margin:0;padding-bottom:60px}
+.topnav{background:#049faa;color:#fff;padding:15px}
+.card-grid{max-width:800px;margin:20px auto;display:grid;grid-gap:20px;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:#fff;padding:20px;border-radius:10px;
+box-shadow:0 4px 8px rgba(0,0,0,.2)}
+.sensor-card{background:#e8f4f8; border-left: 5px solid #049faa;} /* Gaya khusus untuk sensor */
+button{border:none;padding:10px 20px;font-size:16px;color:#fff;
+border-radius:5px;cursor:pointer}
+.on{background:#034078}
+.off{background:#858585}
+.state{margin-top:10px;font-weight:bold;color:#1282A2}
+.sensor-value{font-size: 28px; font-weight: bold; color:#034078; margin: 10px 0;}
+.footer{position:fixed;bottom:0;width:100%;background:#049faa;
+color:#fff;padding:10px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="topnav">
+<h2>ESP Web Control <i class="fas fa-microchip"></i></h2>
+</div>
+
+<div class="card-grid">
+  <div class="card sensor-card">
+    <h3><i class="fas fa-thermometer-half"></i> Temperature</h3>
+    <p class="sensor-value">%TEMP% &deg;C</p>
+  </div>
+  
+  <div class="card sensor-card">
+    <h3><i class="fas fa-tint"></i> Humidity</h3>
+    <p class="sensor-value">%HUM% &percnt;</p>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-lightbulb"></i> Relay 1</h3>
+    <a href="/r1/on"><button class="on">ON</button></a>
+    <a href="/r1/off"><button class="off">OFF</button></a>
+    <p class="state">State: %R1%</p>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-fan"></i> Relay 2</h3>
+    <a href="/r2/on"><button class="on">ON</button></a>
+    <a href="/r2/off"><button class="off">OFF</button></a>
+    <p class="state">State: %R2%</p>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-plug"></i> Relay 3</h3>
+    <a href="/r3/on"><button class="on">ON</button></a>
+    <a href="/r3/off"><button class="off">OFF</button></a>
+    <p class="state">State: %R3%</p>
+  </div>
+</div>
+
+<div class="footer">
+&copy; Willy Riyadi 2025 - ESP8266 / ESP32
+</div>
+</body>
+</html>
+)rawliteral";
+
+/******************** SETUP *********************/
 void setup() {
   Serial.begin(115200);
-  // Initialize the output variables as outputs
-  pinMode(output8, OUTPUT);
-  pinMode(output7, OUTPUT);
-  pinMode(output6, OUTPUT);
-  pinMode(output5, OUTPUT);
-  pinMode(output4, OUTPUT);
-  pinMode(output3, OUTPUT);
-  pinMode(output2, OUTPUT);
-  pinMode(output1, OUTPUT);
+  header.reserve(1024); 
 
-  // Set outputs to LOW
-  digitalWrite(output8, LOW);
-  digitalWrite(output7, LOW);
-  digitalWrite(output6, LOW);
-  digitalWrite(output5, LOW);
-  digitalWrite(output4, LOW);
-  digitalWrite(output3, LOW);
-  digitalWrite(output2, LOW);
-  digitalWrite(output1, LOW);
+  pinMode(RELAY1, OUTPUT);
+  pinMode(RELAY2, OUTPUT);
+  pinMode(RELAY3, OUTPUT);
 
-  // Connect to Wi-Fi network with SSID and password
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  digitalWrite(RELAY1, LOW);
+  digitalWrite(RELAY2, LOW);
+  digitalWrite(RELAY3, LOW);
+
+  dht.begin(); // Inisialisasi sensor DHT
+
   WiFi.begin(ssid, password);
+  Serial.print("Connecting WiFi");
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  // Print local IP address and start web server
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
+
+  Serial.println("\nConnected!");
   Serial.println(WiFi.localIP());
+
   server.begin();
 }
 
-void loop(){
-  WiFiClient client = server.available();   // Listen for incoming clients
+/******************** LOOP *********************/
+void loop() {
+  WiFiClient client = server.available();
+  if (!client) return;
 
-  if (client) {                             // If a new client connects,
-    Serial.println("New Client.");          // print a message out in the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    currentTime = millis();
-    previousTime = currentTime;
-    while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
-      currentTime = millis();         
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
-        header += c;
-        if (c == '\n') {                    // if the byte is a newline character
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
-          if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println("Connection: close");
-            client.println();
+  previousTime = millis();
+  String currentLine = "";
 
-            // turns the GPIOs on and off
-            if (header.indexOf("GET /1/on") >= 0) {
-              Serial.println("GPIO 16 on");
-              output1State = "on";
-              digitalWrite(output1, HIGH);
-            } else if (header.indexOf("GET /1/off") >= 0) {
-              Serial.println("GPIO 16 off");
-              output1State = "off";
-              digitalWrite(output1, LOW);
-            } else if (header.indexOf("GET /2/on") >= 0) {
-              Serial.println("GPIO 5 on");
-              output2State = "on";
-              digitalWrite(output2, HIGH);
-            } else if (header.indexOf("GET /2/off") >= 0) {
-              Serial.println("GPIO 5 off");
-              output2State = "off";
-              digitalWrite(output2, LOW);
-            } else if (header.indexOf("GET /3/on") >= 0) {
-              Serial.println("GPIO 4 on");
-              output3State = "on";
-              digitalWrite(output3, HIGH);
-            } else if (header.indexOf("GET /3/off") >= 0) {
-              Serial.println("GPIO 4 off");
-              output3State = "off";
-              digitalWrite(output3, LOW);
-            } else if (header.indexOf("GET /4/on") >= 0) {
-              Serial.println("GPIO 0 on");
-              output4State = "on";
-              digitalWrite(output4, HIGH);
-            } else if (header.indexOf("GET /4/off") >= 0) {
-              Serial.println("GPIO 0 off");
-              output4State = "off";
-              digitalWrite(output4, LOW);
-            } else if (header.indexOf("GET /5/on") >= 0) {
-              Serial.println("GPIO 2 on");
-              output5State = "on";
-              digitalWrite(output5, HIGH);
-            } else if (header.indexOf("GET /5/off") >= 0) {
-              Serial.println("GPIO 2 off");
-              output5State = "off";
-              digitalWrite(output5, LOW);
-            } else if (header.indexOf("GET /6/on") >= 0) {
-              Serial.println("GPIO 14 on");
-              output6State = "on";
-              digitalWrite(output6, HIGH);
-            } else if (header.indexOf("GET /6/off") >= 0) {
-              Serial.println("GPIO 14 off");
-              output6State = "off";
-              digitalWrite(output6, LOW);
-            } else if (header.indexOf("GET /7/on") >= 0) {
-              Serial.println("GPIO 12 on");
-              output7State = "on";
-              digitalWrite(output7, HIGH);
-            } else if (header.indexOf("GET /7/off") >= 0) {
-              Serial.println("GPIO 12 off");
-              output7State = "off";
-              digitalWrite(output7, LOW);
-            } else if (header.indexOf("GET /8/on") >= 0) {
-              Serial.println("GPIO 13 on");
-              output8State = "on";
-              digitalWrite(output8, HIGH);
-            } else if (header.indexOf("GET /8/off") >= 0) {
-              Serial.println("GPIO 13 off");
-              output8State = "off";
-              digitalWrite(output8, LOW);
-            } 
-            
-            // Display the HTML web page
-            client.println("<!DOCTYPE html><html>");
-            client.println("<head><meta name="viewport" content="width=device-width, initial-scale=1" />");
-            client.println("<link rel=\"icon\" href=\"data:,\">");
-            // CSS to style the on/off buttons 
-            // Feel free to change the background-color and font-size attributes to fit your preferences
-            client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-            client.println(".button { background-color: #195B6A; border: none; color: white; padding: 16px 40px;");
-            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
-            client.println(".button2 {background-color: #77878A;}</style></head>");
+  while (client.connected() && millis() - previousTime < timeoutTime) {
+    if (client.available()) {
+      char c = client.read();
+      header += c;
 
-            // Web Page Heading
-            client.println("<body><h2>NodeMCU ESP8266 WEB Server</h2>");
-            client.println("<body><h3>LED Controller for Pin D0 - D8 </h3>");
+      if (c == '\n') {
+        if (currentLine.length() == 0) {
 
-            // Display current state, and ON/OFF buttons for Pin D0  
-            client.println("<p>Pin D0 - State " + output1State + "</p>");
-            // If the output1State is off, it displays the ON button       
-            if (output1State=="off") {
-              client.println("<p><a href=\"/1/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/1/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-
-            // Display current state, and ON/OFF buttons for Pin D1  
-            client.println("<p>Pin D1 - State " + output2State + "</p>");
-            // If the output2State is off, it displays the ON button       
-            if (output2State=="off") {
-              client.println("<p><a href=\"/2/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/2/off\"><button class=\"button button2\">OFF</button></a></p>");
-            } 
-
-            // Display current state, and ON/OFF buttons for Pin D2  
-            client.println("<p>Pin D2 - State " + output3State + "</p>");
-            // If the output3State is off, it displays the ON button       
-            if (output3State=="off") {
-              client.println("<p><a href=\"/3/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/3/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-            client.println("</body></html>");
-
-            // Display current state, and ON/OFF buttons for Pin D3  
-            client.println("<p>Pin D3 - State " + output4State + "</p>");
-            // If the output3State is off, it displays the ON button       
-            if (output4State=="off") {
-              client.println("<p><a href=\"/4/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/4/off\"><button class=\"button button2\">OFF</button></a></p>");
-            } 
-
-            // Display current state, and ON/OFF buttons for Pin D4  
-            client.println("<p>Pin D4 - State " + output5State + "</p>");
-            // If the output5State is off, it displays the ON button       
-            if (output5State=="off") {
-              client.println("<p><a href=\"/5/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/5/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-
-            // Display current state, and ON/OFF buttons for Pin D5  
-            client.println("<p>Pin D5 - State " + output6State + "</p>");
-            // If the output6State is off, it displays the ON button       
-            if (output6State=="off") {
-              client.println("<p><a href=\"/6/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/6/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-
-            // Display current state, and ON/OFF buttons for Pin D6  
-            client.println("<p>Pin D6 - State " + output7State + "</p>");
-            // If the output7State is off, it displays the ON button       
-            if (output7State=="off") {
-              client.println("<p><a href=\"/7/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/7/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-
-            // Display current state, and ON/OFF buttons for Pin D7  
-            client.println("<p>Pin D7 - State " + output8State + "</p>");
-            // If the output8State is off, it displays the ON button       
-            if (output8State=="off") {
-              client.println("<p><a href=\"/8/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/8/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
-
-            // The HTTP response ends with another blank line
-            client.println();
-            // Break out of the while loop
-            break;
-          } else { // if you got a newline, then clear currentLine
-            currentLine = "";
+          // Cek request endpoint relay
+          if (header.indexOf("GET /r1/on") >= 0) {
+            digitalWrite(RELAY1, HIGH); relay1State = "ON";
+          } else if (header.indexOf("GET /r1/off") >= 0) {
+            digitalWrite(RELAY1, LOW); relay1State = "OFF";
+          } else if (header.indexOf("GET /r2/on") >= 0) {
+            digitalWrite(RELAY2, HIGH); relay2State = "ON";
+          } else if (header.indexOf("GET /r2/off") >= 0) {
+            digitalWrite(RELAY2, LOW); relay2State = "OFF";
+          } else if (header.indexOf("GET /r3/on") >= 0) {
+            digitalWrite(RELAY3, HIGH); relay3State = "ON";
+          } else if (header.indexOf("GET /r3/off") >= 0) {
+            digitalWrite(RELAY3, LOW); relay3State = "OFF";
           }
-        } else if (c != '\r') {  // if you got anything else but a carriage return character,
-          currentLine += c;      // add it to the end of the currentLine
+
+          // Baca data dari DHT22
+          float t = dht.readTemperature();
+          float h = dht.readHumidity();
+
+          // Validasi pembacaan, jika gagal tampilkan "--"
+          String tempString = isnan(t) ? "--" : String(t, 1);
+          String humString  = isnan(h) ? "--" : String(h, 1);
+
+          // Render HTML dan Replace variabel
+          String page = FPSTR(html_page);
+          page.replace("%R1%", relay1State);
+          page.replace("%R2%", relay2State);
+          page.replace("%R3%", relay3State);
+          page.replace("%TEMP%", tempString);
+          page.replace("%HUM%", humString);
+
+          // Kirim HTTP Response
+          client.println("HTTP/1.1 200 OK");
+          client.println("Content-type:text/html");
+          client.println("Connection: close");
+          client.println();
+          client.print(page);
+          client.println();
+          break;
+        } else {
+          currentLine = "";
         }
+      } else if (c != '\r') {
+        currentLine += c;
       }
     }
-    // Clear the header variable
-    header = "";
-    // Close the connection
-    client.stop();
-    Serial.println("Client disconnected.");
-    Serial.println("");
+    yield();
   }
+  header = "";
+  client.stop();
 }
