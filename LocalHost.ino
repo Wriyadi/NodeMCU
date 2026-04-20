@@ -1,5 +1,5 @@
 /*********************************************************
- * ESP8266 / ESP32 - Local WebServer 3 Relay + DHT22
+ * ESP8266 / ESP32 - Local WebServer 4 Relay + DHT22
  * NPN Transistor Relay (ACTIVE HIGH)
  * Fully Cross-Platform Compatible
  *********************************************************/
@@ -12,7 +12,7 @@
   #error "Unsupported board"
 #endif
 
-#include <DHT.h> // Tambahkan library DHT
+#include <DHT.h> 
 
 /******************** WIFI CONFIG ********************/
 const char* ssid     = "NAMA_WIFI_ANDA";
@@ -28,13 +28,15 @@ String header;
 const uint8_t RELAY1 = 5;   // D1
 const uint8_t RELAY2 = 4;   // D2
 const uint8_t RELAY3 = 14;  // D5
+const uint8_t RELAY4 = 12;  // D6
 #elif defined(ESP32)
 const uint8_t RELAY1 = 16;
 const uint8_t RELAY2 = 5;
 const uint8_t RELAY3 = 4;
+const uint8_t RELAY4 = 18;
 #endif
 
-// Konfigurasi Pin DHT22 (Aman untuk ESP8266 dan ESP32)
+// Konfigurasi Pin DHT22 
 #define DHTPIN 2 
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
@@ -43,12 +45,12 @@ DHT dht(DHTPIN, DHTTYPE);
 String relay1State = "OFF";
 String relay2State = "OFF";
 String relay3State = "OFF";
+String relay4State = "OFF"; // State untuk relay ke-4
 
 unsigned long previousTime = 0;
 const unsigned long timeoutTime = 2000;
 
 /******************** HTML + CSS *********************/
-// Menambahkan Card untuk Suhu dan Kelembaban
 const char html_page[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
@@ -64,7 +66,7 @@ body{margin:0;padding-bottom:60px}
 grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .card{background:#fff;padding:20px;border-radius:10px;
 box-shadow:0 4px 8px rgba(0,0,0,.2)}
-.sensor-card{background:#e8f4f8; border-left: 5px solid #049faa;} /* Gaya khusus untuk sensor */
+.sensor-card{background:#e8f4f8; border-left: 5px solid #049faa;} 
 button{border:none;padding:10px 20px;font-size:16px;color:#fff;
 border-radius:5px;cursor:pointer}
 .on{background:#034078}
@@ -111,6 +113,13 @@ color:#fff;padding:10px;font-size:14px}
     <a href="/r3/off"><button class="off">OFF</button></a>
     <p class="state">State: %R3%</p>
   </div>
+  
+  <div class="card">
+    <h3><i class="fas fa-power-off"></i> Relay 4</h3>
+    <a href="/r4/on"><button class="on">ON</button></a>
+    <a href="/r4/off"><button class="off">OFF</button></a>
+    <p class="state">State: %R4%</p>
+  </div>
 </div>
 
 <div class="footer">
@@ -128,12 +137,14 @@ void setup() {
   pinMode(RELAY1, OUTPUT);
   pinMode(RELAY2, OUTPUT);
   pinMode(RELAY3, OUTPUT);
+  pinMode(RELAY4, OUTPUT); // Inisialisasi pin Relay 4
 
   digitalWrite(RELAY1, LOW);
   digitalWrite(RELAY2, LOW);
   digitalWrite(RELAY3, LOW);
+  digitalWrite(RELAY4, LOW); // Default LOW untuk Relay 4
 
-  dht.begin(); // Inisialisasi sensor DHT
+  dht.begin(); 
 
   WiFi.begin(ssid, password);
   Serial.print("Connecting WiFi");
@@ -178,6 +189,10 @@ void loop() {
             digitalWrite(RELAY3, HIGH); relay3State = "ON";
           } else if (header.indexOf("GET /r3/off") >= 0) {
             digitalWrite(RELAY3, LOW); relay3State = "OFF";
+          } else if (header.indexOf("GET /r4/on") >= 0) {
+            digitalWrite(RELAY4, HIGH); relay4State = "ON";
+          } else if (header.indexOf("GET /r4/off") >= 0) {
+            digitalWrite(RELAY4, LOW); relay4State = "OFF";
           }
 
           // Baca data dari DHT22
@@ -193,6 +208,7 @@ void loop() {
           page.replace("%R1%", relay1State);
           page.replace("%R2%", relay2State);
           page.replace("%R3%", relay3State);
+          page.replace("%R4%", relay4State); // Replace variabel Relay 4 di HTML
           page.replace("%TEMP%", tempString);
           page.replace("%HUM%", humString);
 
