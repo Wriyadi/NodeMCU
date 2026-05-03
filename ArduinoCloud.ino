@@ -69,6 +69,20 @@ PIN SETTING
 
 #define DHTTYPE DHT22
 
+/*
+=====================================================
+RELAY ACTIVE LOW
+=====================================================
+Jika relay aktif LOW maka:
+
+ON  = LOW
+OFF = HIGH
+=====================================================
+*/
+
+#define state_ON  LOW
+#define state_OFF HIGH
+
 DHT dht(DHTPIN, DHTTYPE);
 
 
@@ -102,16 +116,16 @@ void setup() {
   */
 
   pinMode(RELAY1, OUTPUT);
-  digitalWrite(RELAY1, LOW);
+  digitalWrite(RELAY1, state_OFF);
 
   pinMode(RELAY2, OUTPUT);
-  digitalWrite(RELAY2, LOW);
+  digitalWrite(RELAY2, state_OFF);
 
   pinMode(RELAY3, OUTPUT);
-  digitalWrite(RELAY3, LOW);
+  digitalWrite(RELAY3, state_OFF);
 
   pinMode(RELAY4, OUTPUT);
-  digitalWrite(RELAY4, LOW);
+  digitalWrite(RELAY4, state_OFF);
 
   /*
   =====================================
@@ -198,28 +212,28 @@ Dipanggil otomatis saat nilai cloud berubah
 */
 
 void onRelay1Change() {
-  digitalWrite(RELAY1, relay1 ? HIGH : LOW);
+  digitalWrite(RELAY1, relay1 ? state_ON : state_OFF);
 
   Serial.print("Relay 1: ");
   Serial.println(relay1 ? "ON" : "OFF");
 }
 
 void onRelay2Change() {
-  digitalWrite(RELAY2, relay2 ? HIGH : LOW);
+  digitalWrite(RELAY2, relay2 ? state_ON : state_OFF);
 
   Serial.print("Relay 2: ");
   Serial.println(relay2 ? "ON" : "OFF");
 }
 
 void onRelay3Change() {
-  digitalWrite(RELAY3, relay3 ? HIGH : LOW);
+  digitalWrite(RELAY3, relay3 ? state_ON : state_OFF);
 
   Serial.print("Relay 3: ");
   Serial.println(relay3 ? "ON" : "OFF");
 }
 
 void onRelay4Change() {
-  digitalWrite(RELAY4, relay4 ? HIGH : LOW);
+  digitalWrite(RELAY4, relay4 ? state_ON : state_OFF);
 
   Serial.print("Relay 4: ");
   Serial.println(relay4 ? "ON" : "OFF");
