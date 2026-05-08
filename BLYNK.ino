@@ -70,7 +70,14 @@ void sendSensor() {
     Serial.println("Gagal membaca dari sensor DHT!");
     return;
   }
-  
+  // Tampilkan Suhu di Serial Monitor
+  Serial.print("Suhu: ");
+  Serial.print(t);
+  Serial.print(" °C");
+  // Tampilkan Kelembapan di Serial Monitor
+  Serial.print(" | Kelembapan: ");
+  Serial.print(h);
+  Serial.println(" %");
   // Mengirim data ke Virtual Pin Blynk
   Blynk.virtualWrite(V4, h); 
   Blynk.virtualWrite(V5, t); 
