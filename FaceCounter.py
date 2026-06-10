@@ -4,49 +4,58 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-# STEP 2: Create a FaceDetector object.
-base_options = python.BaseOptions(model_asset_path='detector.tflite')
+# 1. Inisialisasi Detektor Wajah
+base_options = python.BaseOptions(model_asset_path='blaze_face_full_range.tflite')
 options = vision.FaceDetectorOptions(base_options=base_options)
 detector = vision.FaceDetector.create_from_options(options)
 
-# STEP 3: Load the input image.
-IMAGE_FILE = 'input_image.jpg'  # Ganti dengan nama file gambar Anda
-image = mp.Image.create_from_file(IMAGE_FILE)
+# 2. Inisialisasi Kamera
+video = cv2.VideoCapture(0)
 
-# STEP 4: Detect faces in the input image.
-detection_result = detector.detect(image)
+print("Membuka Kamera... Tekan 'q' pada jendela video untuk keluar.")
 
-# STEP 5: Process the detection result and count faces
-image_copy = np.copy(image.numpy_view())
+while True:
+    success, frame = video.read()
+    if not success:
+        print("Gagal membaca frame dari kamera.")
+        break
 
-# --- LOGIKA MENGHITUNG WAJAH ---
-jumlah_wajah = 0
-if detection_result.detections:
-    jumlah_wajah = len(detection_result.detections)
+    # Efek cermin (opsional)
+    frame = cv2.flip(frame, 1)
 
-print(f"Jumlah wajah yang terdeteksi: {jumlah_wajah}")
-# --------------------------------
+    # MediaPipe Tasks memerlukan objek mp.Image berformat RGB
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-# Menggambar kotak di wajah secara manual jika fungsi 'visualize' bawaan tidak ada
-annotated_image = cv2.cvtColor(image_copy, cv2.COLOR_RGB2BGR)
-if detection_result.detections:
-    for detection in detection_result.detections:
-        bbox = detection.bounding_box
-        start_point = (int(bbox.origin_x), int(bbox.origin_y))
-        end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
-        # Gambar kotak hijau di setiap wajah
-        cv2.rectangle(annotated_image, start_point, end_point, (0, 255, 0), 3)
+    # Deteksi Wajah
+    detection_result = detector.detect(mp_image)
+    
+    # Hitung jumlah wajah
+    jumlah_wajah = len(detection_result.detections) if detection_result.detections else 0
 
-# Tulis jumlah wajah ke dalam gambar
-cv2.putText(annotated_image, f"Total Wajah: {jumlah_wajah}", (30, 50),
-            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    # Visualisasi kotak wajah
+    if detection_result.detections:
+        for detection in detection_result.detections:
+            bbox = detection.bounding_box
+            # Proteksi koordinat agar tidak minus/keluar layar
+            x = max(0, int(bbox.origin_x))
+            y = max(0, int(bbox.origin_y))
+            w = int(bbox.width)
+            h = int(bbox.height)
+            
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-# Tampilkan Gambar
-# JIKA DI PC/LAPTOP LOKAL:
-cv2.imshow("Hasil Deteksi", annotated_image)
-cv2.waitKey(0)
+    # Tampilkan teks jumlah wajah di layar monitor
+    cv2.putText(frame, f"Jumlah Wajah: {jumlah_wajah}", (30, 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+    cv2.imshow("Real-time Face Counter", frame)
+
+    # Keluar dari looping jika menekan tombol 'q'
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Bersihkan resources
+detector.close()
+video.release()
 cv2.destroyAllWindows()
-
-# JIKA DI GOOGLE COLAB (Hapus tanda komentar di bawah jika pakai Colab):
-# from google.colab.patches import cv2_imshow
-# cv2_imshow(annotated_image)
