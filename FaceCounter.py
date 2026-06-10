@@ -1,50 +1,52 @@
 import cv2
+import numpy as np
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
-# Initialize MediaPipe Face Detection and drawing utilities
-mp_face_detection = mp.solutions.face_detection
-mp_drawing = mp.solutions.drawing_utils
+# STEP 2: Create a FaceDetector object.
+base_options = python.BaseOptions(model_asset_path='detector.tflite')
+options = vision.FaceDetectorOptions(base_options=base_options)
+detector = vision.FaceDetector.create_from_options(options)
 
-# Initialize Face Detection model
-face_detection = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
+# STEP 3: Load the input image.
+IMAGE_FILE = 'input_image.jpg'  # Ganti dengan nama file gambar Anda
+image = mp.Image.create_from_file(IMAGE_FILE)
 
-# Open the webcam
-video = cv2.VideoCapture(0)
+# STEP 4: Detect faces in the input image.
+detection_result = detector.detect(image)
 
-while True:
-    success, frame = video.read()
-    if not success:
-        print("Ignoring empty camera frame.")
-        continue
+# STEP 5: Process the detection result and count faces
+image_copy = np.copy(image.numpy_view())
 
-    # Convert the frame from BGR to RGB (MediaPipe uses RGB)
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+# --- LOGIKA MENGHITUNG WAJAH ---
+jumlah_wajah = 0
+if detection_result.detections:
+    jumlah_wajah = len(detection_result.detections)
 
-    # Process the frame to detect faces
-    results = face_detection.process(rgb_frame)
+print(f"Jumlah wajah yang terdeteksi: {jumlah_wajah}")
+# --------------------------------
 
-    # Initialize face count
-    face_count = 0
+# Menggambar kotak di wajah secara manual jika fungsi 'visualize' bawaan tidak ada
+annotated_image = cv2.cvtColor(image_copy, cv2.COLOR_RGB2BGR)
+if detection_result.detections:
+    for detection in detection_result.detections:
+        bbox = detection.bounding_box
+        start_point = (int(bbox.origin_x), int(bbox.origin_y))
+        end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
+        # Gambar kotak hijau di setiap wajah
+        cv2.rectangle(annotated_image, start_point, end_point, (0, 255, 0), 3)
 
-    # Check if any faces are detected
-    if results.detections:
-        face_count = len(results.detections)  # Count the number of faces
+# Tulis jumlah wajah ke dalam gambar
+cv2.putText(annotated_image, f"Total Wajah: {jumlah_wajah}", (30, 50),
+            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-        # Draw bounding boxes around detected faces
-        for detection in results.detections:
-            mp_drawing.draw_detection(frame, detection)
-
-    # Display the face count on the frame
-    cv2.putText(frame, f'Faces: {face_count}', (50, 50),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-    # Show the frame with detections
-    cv2.imshow("Face Detection", frame)
-
-    # Break the loop if 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release the video capture and close windows
-video.release()
+# Tampilkan Gambar
+# JIKA DI PC/LAPTOP LOKAL:
+cv2.imshow("Hasil Deteksi", annotated_image)
+cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+# JIKA DI GOOGLE COLAB (Hapus tanda komentar di bawah jika pakai Colab):
+# from google.colab.patches import cv2_imshow
+# cv2_imshow(annotated_image)
